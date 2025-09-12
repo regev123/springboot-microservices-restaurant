@@ -1,7 +1,6 @@
 package com.restaurant.auth.auth_service.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
