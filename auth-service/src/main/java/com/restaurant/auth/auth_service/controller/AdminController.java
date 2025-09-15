@@ -1,7 +1,6 @@
 package com.restaurant.auth.auth_service.controller;
 
 import com.restaurant.auth.auth_service.dto.UpdateUserRoleRequest;
-import com.restaurant.auth.auth_service.dto.UserDetailsResponse;
 import com.restaurant.auth.auth_service.entity.UserEntity;
 import com.restaurant.auth.auth_service.repository.UserRepository;
 import com.restaurant.auth.auth_service.service.AdminService;
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AdminController {
 

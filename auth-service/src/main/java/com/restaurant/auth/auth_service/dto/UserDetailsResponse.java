@@ -3,10 +3,12 @@ package com.restaurant.auth.auth_service.dto;
 import com.restaurant.auth.auth_service.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Data
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 public class UserDetailsResponse {
     private Long id;

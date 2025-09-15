@@ -35,10 +35,10 @@ public class AdminInitializer {
 
                 userRepository.save(admin);
 
-                log.info("✅ Admin user created: {}", adminEmail);
-                log.warn("⚠️ Default password should be changed immediately!");
+                log.info("Admin user created: {}", adminEmail);
+                log.warn("Default password should be changed immediately!");
             } else {
-                log.info("ℹ️ Admin user already exists. Skipping creation.");
+                log.info("Admin user already exists. Skipping creation.");
             }
         };
     }
