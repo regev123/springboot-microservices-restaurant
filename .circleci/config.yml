@@ -3,20 +3,31 @@ version: 2.1
 executors:
   java-executor:
     docker:
-      - image: cimg/openjdk:17.0  # CircleCI image with JDK 17
+      - image: cimg/openjdk:17.0 # CircleCI image with JDK 17
     working_directory: ~/repo
 
 jobs:
-  build-and-test:
+  build-and-test-auth-service:
     executor: java-executor
     steps:
-      - checkout  # Pulls your code from GitHub into CircleCI
+      - checkout
       - run:
           name: Build and Test Auth Service
           command: mvn -B clean install -f auth-service/pom.xml
+
+  build-and-test-api-gateway:
+    executor: java-executor
+    steps:
+      - checkout
+      - run:
+          name: Build and Test API Gateway Service
+          command: mvn -B clean install -f api-gateway-service/pom.xml
 
 workflows:
   version: 2
   ci_pipeline:
     jobs:
-      - build-and-test
+      - build-and-test-auth-service
+      - build-and-test-api-gateway:
+          requires:
+            - build-and-test-auth-service
