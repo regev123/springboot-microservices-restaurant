@@ -1,8 +1,7 @@
-package com.restaurant.auth.auth_service;
+package com.restaurant.auth.auth_service.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.auth.auth_service.dto.RegisterRequest;
-import com.restaurant.auth.auth_service.entity.UserEntity;
 import com.restaurant.auth.auth_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,11 +1,14 @@
 package com.restaurant.apiGateway.api_gateway_service.dto;
 
-import lombok.RequiredArgsConstructor;
-
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.Instant;
 
-@RequiredArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TokenValidationRequest {
-    private final String email;
-    private final Instant issuedAt;
+    private String email;
+    private Instant issuedAt;
 }

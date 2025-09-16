@@ -23,7 +23,7 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("${external.auth-service.url}")
+    @Value("${auth.service.url}")
     private String authServiceBaseUrl;
 
     private final RestTemplate restTemplate;

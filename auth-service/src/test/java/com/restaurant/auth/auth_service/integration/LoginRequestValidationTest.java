@@ -1,4 +1,4 @@
-package com.restaurant.auth.auth_service;
+package com.restaurant.auth.auth_service.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.auth.auth_service.dto.LoginRequest;

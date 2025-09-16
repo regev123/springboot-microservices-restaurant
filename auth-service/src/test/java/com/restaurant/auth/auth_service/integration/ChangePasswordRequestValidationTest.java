@@ -1,7 +1,8 @@
-package com.restaurant.auth.auth_service;
+package com.restaurant.auth.auth_service.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.auth.auth_service.dto.ChangePasswordRequest;
+import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.entity.UserEntity;
 import com.restaurant.auth.auth_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,13 +43,16 @@ class ChangePasswordRequestValidationTest {
     void setUp() {
         userRepository.deleteAll();
 
-        // Create a user to test password change
         UserEntity user = new UserEntity();
         user.setEmail(TEST_EMAIL);
         user.setPassword(passwordEncoder.encode(TEST_OLD_PASSWORD));
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setPhoneNumber("0501234567");
 
         userRepository.save(user);
     }
+
 
     // ---------- SUCCESS CASE ----------
 
@@ -61,7 +65,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -79,7 +83,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -95,7 +99,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -111,7 +115,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -127,7 +131,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -146,7 +150,7 @@ class ChangePasswordRequestValidationTest {
                 ""
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -162,7 +166,7 @@ class ChangePasswordRequestValidationTest {
                 "weakpass"
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -183,11 +187,11 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or old password is incorrect"));
+                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
     }
 
     // ---------- FAILURE: INCORRECT EMAIL ----------
@@ -201,10 +205,10 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/changePassword")
+        mockMvc.perform(post("/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or old password is incorrect"));
+                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
     }
 }
