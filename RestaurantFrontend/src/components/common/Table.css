@@ -1,0 +1,40 @@
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.modern-table th {
+  background: #f1f5f9;
+  padding: 14px;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.modern-table td {
+  padding: 12px 14px;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.modern-table tr:hover {
+  background: #f9fafc;
+}
+
+/* Pagination alignment */
+.table-wrapper .pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}

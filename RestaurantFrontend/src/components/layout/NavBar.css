@@ -1,0 +1,99 @@
+/* ====== Navbar Container ====== */
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Brand + Links on left, Logout on right */
+  align-items: center;
+  background: #ffffff;
+  padding: 14px 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+}
+
+/* ====== Left Section: Brand + Links ====== */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 30px; /* space between brand and links */
+}
+
+.nav-left .brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007bff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.3s ease;
+}
+
+.nav-left .brand:hover {
+  color: #0056b3;
+}
+
+/* ====== Navigation Links ====== */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #495057;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.nav-link:hover {
+  background: #f0f4ff;
+  color: #007bff;
+  text-decoration: none;
+}
+
+/* ====== Logout Button ====== */
+.nav-right .logout-btn {
+  background: linear-gradient(135deg, #ff4d4d, #ff6b6b);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 4px 8px rgba(255, 77, 77, 0.3);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.nav-right .logout-btn:hover {
+  background: linear-gradient(135deg, #e60000, #ff3333);
+  transform: translateY(-2px);
+}
+
+/* ====== Responsive Design ====== */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .nav-links {
+    gap: 15px;
+  }
+
+  .nav-right {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

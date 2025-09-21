@@ -4,7 +4,6 @@ import com.restaurant.auth.auth_service.entity.Role;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.digester.Rule;
 
 /**
  * Data Transfer Object (DTO) for returning user information
