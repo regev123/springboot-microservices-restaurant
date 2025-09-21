@@ -2,6 +2,7 @@ package com.restaurant.auth.auth_service.unit;
 
 import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.entity.UserEntity;
+import com.restaurant.common.exception.UserNotFoundException;
 import com.restaurant.auth.auth_service.service.JwtService;
 import com.restaurant.auth.auth_service.service.UserLookupService;
 import com.restaurant.auth.auth_service.util.JwtProperties;
@@ -20,58 +21,73 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for {@link JwtService}.
  *
- * <p>These tests focus on verifying token generation logic and ensuring that
- * dependencies such as {@link UserLookupService} and {@link JwtProperties}
- * are correctly used within the service.</p>
+ * <p>This class verifies the behavior of the JWT token generation logic,
+ * ensuring it correctly interacts with its dependencies:
+ * {@link UserLookupService} and {@link JwtProperties}.</p>
+ *
+ * <p>Tests cover both successful token generation and failure scenarios.</p>
  */
 class JwtServiceTest {
 
+    // ===========================
+    // Mocked Dependencies
+    // ===========================
     @Mock
-    private JwtProperties jwtProperties; // Mocked configuration for JWT
+    private JwtProperties jwtProperties; // Mocked JWT configuration (secret, expiration, etc.)
 
     @Mock
-    private UserLookupService userLookupService; // Mocked service to fetch user details
+    private UserLookupService userLookupService; // Mocked service for user retrieval
 
     @InjectMocks
     private JwtService jwtService; // Class under test
 
-    // Test constants
+    // ===========================
+    // Test Constants
+    // ===========================
     private static final String SECRET_KEY = "ThisIsASecretKeyForJwtToken1234567890"; // Must be at least 32 chars
-    private static final long EXPIRATION_TIME = 3600000; // 1 hour
+    private static final long EXPIRATION_TIME = 3_600_000; // 1 hour in milliseconds
 
     private UserDetails mockUserDetails;
     private UserEntity mockUserEntity;
 
+    // ===========================
+    // Setup
+    // ===========================
+
     /**
-     * Initializes mocks and sets up common test data before each test case.
+     * Initializes mock objects and common test data before each test.
      */
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        // Mock JWT properties behavior
+        // Configure mocked JWT properties
         when(jwtProperties.getSecret()).thenReturn(SECRET_KEY);
         when(jwtProperties.getExpiration()).thenReturn(EXPIRATION_TIME);
 
-        // Create a mock Spring Security user (UserDetails)
+        // Create a mock Spring Security UserDetails object
         mockUserDetails = User.builder()
                 .username("testuser@example.com")
                 .password("password")
                 .roles("USER")
                 .build();
 
-        // Create a mock UserEntity that represents a database user
+        // Create a mock UserEntity representing a database user
         mockUserEntity = new UserEntity();
         mockUserEntity.setId(1L);
         mockUserEntity.setEmail("testuser@example.com");
         mockUserEntity.setRole(Role.USER);
     }
 
+    // ===========================
+    // Tests
+    // ===========================
+
     /**
-     * Verifies that a valid JWT token is generated when a valid user exists.
+     * Verifies that a valid JWT token is generated when the user exists in the database.
      */
     @Test
-    @DisplayName("generateToken - Should generate a valid JWT token")
+    @DisplayName("generateToken - Should generate a valid JWT token for an existing user")
     void testGenerateTokenSuccess() {
         // Given
         when(userLookupService.getUserByEmail("testuser@example.com"))
@@ -87,20 +103,21 @@ class JwtServiceTest {
     }
 
     /**
-     * Verifies that an exception is thrown when attempting to generate
-     * a token for a non-existent user.
+     * Verifies that an exception is thrown when trying to generate a token
+     * for a user that does not exist in the database.
      */
     @Test
-    @DisplayName("generateToken - Should throw exception when user not found")
+    @DisplayName("generateToken - Should throw exception when user is not found")
     void testGenerateTokenUserNotFound() {
         // Given
         when(userLookupService.getUserByEmail("testuser@example.com"))
-                .thenThrow(new IllegalArgumentException("User not found"));
+                .thenThrow(new UserNotFoundException("User not found"));
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> jwtService.generateToken(mockUserDetails)
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> jwtService.generateToken(mockUserDetails),
+                "Expected generateToken() to throw, but it didn't"
         );
 
         assertEquals("User not found", exception.getMessage());

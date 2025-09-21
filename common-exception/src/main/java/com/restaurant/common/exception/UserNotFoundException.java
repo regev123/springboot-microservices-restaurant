@@ -1,4 +1,4 @@
-package com.restaurant.apiGateway.api_gateway_service.exception;
+package com.restaurant.common.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

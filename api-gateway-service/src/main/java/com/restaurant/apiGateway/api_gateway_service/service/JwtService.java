@@ -2,7 +2,8 @@ package com.restaurant.apiGateway.api_gateway_service.service;
 
 import com.restaurant.apiGateway.api_gateway_service.dto.TokenValidationRequest;
 import com.restaurant.apiGateway.api_gateway_service.exception.TokenOutdatedException;
-import com.restaurant.apiGateway.api_gateway_service.exception.UserNotFoundException;
+import com.restaurant.apiGateway.api_gateway_service.util.JwtProperties;
+import com.restaurant.common.exception.UserNotFoundException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,7 @@ import java.util.Date;
 @Slf4j
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
+    private final JwtProperties jwtProperties;
 
     @Value("${auth.service.url}")
     private String authServiceBaseUrl;
@@ -51,7 +51,7 @@ public class JwtService {
     }
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
     private void sendTokenValidationRequest(Claims claims) {

@@ -18,8 +18,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for validating the Login API endpoint.
+ *
+ * <p>
+ * This suite verifies that the login endpoint correctly validates
+ * incoming requests, handles authentication failures, and returns
+ * JWT tokens for successful logins.
+ * </p>
+ */
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // Disable security filters for test isolation
 class LoginRequestValidationTest {
 
     @Autowired
@@ -34,15 +43,17 @@ class LoginRequestValidationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private static final String LOGIN_PATH = "/auth/login";
     private static final String TEST_EMAIL = "admin@restaurant.com";
     private static final String TEST_PASSWORD = "Admin@123";
 
     /**
-     * Insert a user before each test to ensure a valid login exists
+     * Prepares the database before each test by inserting a test user
+     * with known credentials for authentication scenarios.
      */
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll(); // Clean DB to avoid duplicates
+        userRepository.deleteAll(); // Ensure a clean state before each test
 
         UserEntity user = new UserEntity();
         user.setEmail(TEST_EMAIL);
@@ -51,54 +62,60 @@ class LoginRequestValidationTest {
         userRepository.save(user);
     }
 
-    // ---------- SUCCESS LOGIN ----------
+    // ==================================================
+    // SUCCESS CASE
+    // ==================================================
 
     @Test
     @DisplayName("Login API - Success with valid credentials")
     void loginWithValidCredentials() throws Exception {
         LoginRequest request = new LoginRequest(TEST_EMAIL, TEST_PASSWORD);
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists()); // Ensure token is returned
+                .andExpect(jsonPath("$.token").exists()); // Token must be returned on successful login
     }
 
-    // ---------- CREDENTIALS FAILURES ----------
+    // ==================================================
+    // FAILURE CASES - INVALID CREDENTIALS
+    // ==================================================
 
     @Test
-    @DisplayName("Login API - Invalid email should return custom exception")
+    @DisplayName("Login API - Invalid email should return custom error response")
     void loginWithInvalidEmail() throws Exception {
         LoginRequest request = new LoginRequest("wrong.email@test.com", TEST_PASSWORD);
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
+                .andExpect(jsonPath("$.message").value("Email or password is incorrect"));
     }
 
     @Test
-    @DisplayName("Login API - Invalid password should return custom exception")
+    @DisplayName("Login API - Invalid password should return custom error response")
     void loginWithInvalidPassword() throws Exception {
         LoginRequest request = new LoginRequest(TEST_EMAIL, "WrongPass@123");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
+                .andExpect(jsonPath("$.message").value("Email or password is incorrect"));
     }
 
-    // ---------- VALIDATION FAILURES ----------
+    // ==================================================
+    // FAILURE CASES - VALIDATION ERRORS
+    // ==================================================
 
     @Test
-    @DisplayName("Login API - Missing email")
+    @DisplayName("Login API - Missing email should trigger validation error")
     void loginMissingEmail() throws Exception {
         LoginRequest request = new LoginRequest("", "Valid@123");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -106,11 +123,11 @@ class LoginRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Login API - Invalid email format")
+    @DisplayName("Login API - Invalid email format should trigger validation error")
     void loginInvalidEmailFormat() throws Exception {
         LoginRequest request = new LoginRequest("invalid-email", "Valid@123");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -118,11 +135,11 @@ class LoginRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Login API - Missing password")
+    @DisplayName("Login API - Missing password should trigger validation error")
     void loginMissingPassword() throws Exception {
         LoginRequest request = new LoginRequest("valid.email@test.com", "");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -130,12 +147,12 @@ class LoginRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Login API - Weak password (does not meet pattern requirements)")
+    @DisplayName("Login API - Weak password should trigger validation error")
     void loginWeakPassword() throws Exception {
-        // Password missing special character
+        // Password missing special character and uppercase letter
         LoginRequest request = new LoginRequest("valid.email@test.com", "Weakpass1");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post(LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())

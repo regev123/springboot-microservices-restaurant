@@ -12,6 +12,8 @@
     <modules>
         <module>auth-service</module>
         <module>api-gateway-service</module>
+        <module>common-exception</module>
+        <module>menu-service</module>
     </modules>
 
     <properties>

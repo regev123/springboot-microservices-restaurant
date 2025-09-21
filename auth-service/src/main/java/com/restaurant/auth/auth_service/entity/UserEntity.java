@@ -57,8 +57,7 @@ public class UserEntity implements UserDetails {
 
     /** Role assigned to the user (e.g., ADMIN, USER, SUPERVISOR) */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role = Role.USER;
+    private Role role;
 
     /**
      * Returns the username for Spring Security authentication.

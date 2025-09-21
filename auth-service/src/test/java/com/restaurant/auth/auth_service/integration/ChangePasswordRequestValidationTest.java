@@ -2,7 +2,6 @@ package com.restaurant.auth.auth_service.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.auth.auth_service.dto.ChangePasswordRequest;
-import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.entity.UserEntity;
 import com.restaurant.auth.auth_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +18,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for validating the Change Password API endpoint.
+ *
+ * <p>
+ * This suite ensures that the API behaves correctly by validating:
+ * <ul>
+ *     <li>Successful password changes with valid input.</li>
+ *     <li>Validation errors for missing or malformed fields.</li>
+ *     <li>Error handling for invalid old passwords or non-existent users.</li>
+ * </ul>
+ * </p>
+ */
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // Disable Spring Security filters for isolated testing
 class ChangePasswordRequestValidationTest {
 
     @Autowired
@@ -35,13 +46,19 @@ class ChangePasswordRequestValidationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // Test constants
+    private static final String CHANGE_PASSWORD_PATH = "/auth/change-password";
     private static final String TEST_EMAIL = "user@restaurant.com";
     private static final String TEST_OLD_PASSWORD = "OldPass@123";
     private static final String TEST_NEW_PASSWORD = "NewPass@123";
 
+    /**
+     * Prepares a fresh test database before each test by inserting
+     * a single user with a known email and password.
+     */
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        userRepository.deleteAll(); // Clean the database before each test
 
         UserEntity user = new UserEntity();
         user.setEmail(TEST_EMAIL);
@@ -53,8 +70,9 @@ class ChangePasswordRequestValidationTest {
         userRepository.save(user);
     }
 
-
-    // ---------- SUCCESS CASE ----------
+    // ==================================================
+    // SUCCESS CASE
+    // ==================================================
 
     @Test
     @DisplayName("Change Password API - Success with valid data")
@@ -65,14 +83,16 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists()); // Token returned after successful change
+                .andExpect(jsonPath("$.token").exists()); // Ensure token is returned after successful change
     }
 
-    // ---------- VALIDATION FAILURES ----------
+    // ==================================================
+    // VALIDATION ERRORS
+    // ==================================================
 
     @Test
     @DisplayName("Change Password API - Missing email")
@@ -83,7 +103,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -99,7 +119,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -115,7 +135,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -123,7 +143,7 @@ class ChangePasswordRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Change Password API - Weak old password")
+    @DisplayName("Change Password API - Weak old password format")
     void changePasswordWeakOldPassword() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest(
                 TEST_EMAIL,
@@ -131,7 +151,7 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -150,7 +170,7 @@ class ChangePasswordRequestValidationTest {
                 ""
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -158,7 +178,7 @@ class ChangePasswordRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Change Password API - Weak new password")
+    @DisplayName("Change Password API - Weak new password format")
     void changePasswordWeakNewPassword() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest(
                 TEST_EMAIL,
@@ -166,7 +186,7 @@ class ChangePasswordRequestValidationTest {
                 "weakpass"
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -176,7 +196,9 @@ class ChangePasswordRequestValidationTest {
                 ));
     }
 
-    // ---------- FAILURE: INCORRECT OLD PASSWORD ----------
+    // ==================================================
+    // FAILURE CASES - INVALID OLD PASSWORD OR EMAIL
+    // ==================================================
 
     @Test
     @DisplayName("Change Password API - Incorrect old password")
@@ -187,17 +209,15 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
+                .andExpect(jsonPath("$.message").value("Email or password is incorrect"));
     }
 
-    // ---------- FAILURE: INCORRECT EMAIL ----------
-
     @Test
-    @DisplayName("ChangePassword API - Non-existent email should return custom error")
+    @DisplayName("Change Password API - Non-existent email should return custom error")
     void changePasswordWithNonExistentEmail() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest(
                 "nonexistent@restaurant.com",
@@ -205,10 +225,10 @@ class ChangePasswordRequestValidationTest {
                 TEST_NEW_PASSWORD
         );
 
-        mockMvc.perform(post("/auth/change-password")
+        mockMvc.perform(post(CHANGE_PASSWORD_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Email or password is incorrect"));
+                .andExpect(jsonPath("$.message").value("Email or password is incorrect"));
     }
 }

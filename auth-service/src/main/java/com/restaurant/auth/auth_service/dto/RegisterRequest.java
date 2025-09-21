@@ -23,7 +23,7 @@ public class RegisterRequest {
      * The user's email.
      * <p>Must be provided and follow a valid email format.</p>
      */
-    @NotBlank(message = "Email is required")
+    @NotBlank(message = "Email is requiredD")
     @Email(message = "Email should be valid")
     private final String email;
 
@@ -85,4 +85,7 @@ public class RegisterRequest {
             message = "Phone number must start with 05 and be exactly 10 digits"
     )
     private final String phoneNumber;
+
+    @NotBlank(message = "Role is required")
+    private final String role;
 }

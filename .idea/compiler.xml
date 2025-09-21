@@ -18,13 +18,15 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="api-gateway-service" />
         <module name="auth-service" />
+        <module name="menu-service" />
+        <module name="api-gateway-service" />
+        <module name="common-exception" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="common-security" target="17" />
       <module name="integration-tests" target="17" />
     </bytecodeTargetLevel>
   </component>

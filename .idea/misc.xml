@@ -9,6 +9,7 @@
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/common-security/pom.xml" />
         <option value="$PROJECT_DIR$/integration-tests/pom.xml" />
       </set>
     </option>

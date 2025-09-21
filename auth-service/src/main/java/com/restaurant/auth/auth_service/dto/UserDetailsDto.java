@@ -20,7 +20,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor(force = true) // Required for JSON deserialization
 @AllArgsConstructor              // Generates a full-args constructor for easy initialization
-public class UserDetailsResponse {
+public class UserDetailsDto {
 
     /** Unique identifier of the user */
     private Long id;

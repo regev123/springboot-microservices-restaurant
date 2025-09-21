@@ -1,10 +1,11 @@
 package com.restaurant.auth.auth_service.controller;
 
-import com.restaurant.auth.auth_service.dto.UpdateUserRoleRequest;
-import com.restaurant.auth.auth_service.entity.UserEntity;
+import com.restaurant.auth.auth_service.dto.*;
 import com.restaurant.auth.auth_service.service.AdminService;
+import com.restaurant.auth.auth_service.util.AuthorizationUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth/admin")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminController {
 
     private final AdminService adminService;
-
+    private final AuthorizationUtil authorizationUtil;
     /**
      * Updates the role of a specific user.
      *
@@ -36,13 +38,13 @@ public class AdminController {
      * @return HTTP 200 OK with a success message
      */
     @PutMapping("/users/{userId}/role")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> updateUserRole(
-            @PathVariable Long userId,
+    public ResponseEntity<UpdateUserRoleResponse> updateUserRole(
+            @RequestHeader("X-User-Role") String userRole,
+            @PathVariable("userId") Long userId,
             @Valid @RequestBody UpdateUserRoleRequest request
     ) {
-        adminService.updateUserRole(userId, request);
-        return ResponseEntity.ok("User role updated successfully");
+        authorizationUtil.checkRole(userRole,"ADMIN");
+        return ResponseEntity.ok(adminService.updateUserRole(userId, request));
     }
 
     /**
@@ -50,15 +52,42 @@ public class AdminController {
      *
      * <p>Only accessible to users with the ADMIN role.</p>
      *
-     * @param authHeader the "Authorization" header containing the JWT token
      * @return a list of all users excluding the currently authenticated admin
      */
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserEntity>> getAllUsers(
-            @RequestHeader("Authorization") String authHeader
+    public ResponseEntity<UsersWithRolesResponse> getAllUsers(
+            @RequestHeader("X-User-Role") String userRole,
+            @RequestHeader("X-User-Email") String userEmail
     ) {
-        List<UserEntity> users = adminService.getAllUsersExcludingCurrent(authHeader);
-        return ResponseEntity.ok(users);
+        authorizationUtil.checkRole(userRole,"ADMIN");
+        List<UserDetailsDto> users = adminService.getAllUsersExcludingCurrent(userEmail);
+        log.info("in getAllUsers the user list is : {}", users.toString());
+        List<String> roles = adminService.getAllRolesList();
+        return ResponseEntity.ok(new UsersWithRolesResponse(users, roles));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<String> deleteUser(
+            @RequestHeader("X-User-Role") String userRole,
+            @PathVariable("userId") Long userId
+    ) {
+        authorizationUtil.checkRole(userRole, "ADMIN");
+        adminService.deleteUser(userId);
+        return ResponseEntity.ok("User deleted successfully!");
+    }
+
+    /**
+     * Registers a new user.
+     *
+     * @param request the registration details (validated)
+     * @return an authentication response containing a JWT token
+     */
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestHeader("X-User-Role") String userRole,
+                                           @Valid @RequestBody RegisterRequest request
+    ) {
+        authorizationUtil.checkRole(userRole,"ADMIN");
+        adminService.register(request);
+        return ResponseEntity.ok("User registered successfully");
     }
 }

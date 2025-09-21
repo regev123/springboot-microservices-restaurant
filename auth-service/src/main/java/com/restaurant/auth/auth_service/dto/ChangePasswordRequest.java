@@ -52,7 +52,7 @@ public class ChangePasswordRequest {
      *   </li>
      * </ul>
      */
-    @Size(min = 1, message = "Password is required")
+    @Size(min = 1, message = "Old password is required")
     @Pattern(
             regexp = "^$|^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$",
             message = "Password must be at least 8 characters long and include 1 uppercase letter, " +
@@ -77,7 +77,7 @@ public class ChangePasswordRequest {
      *   </li>
      * </ul>
      */
-    @Size(min = 1, message = "Password is required")
+    @Size(min = 1, message = "New password is required")
     @Pattern(
             regexp = "^$|^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$",
             message = "Password must be at least 8 characters long and include 1 uppercase letter, " +

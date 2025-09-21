@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>com.regev</groupId>
-		<artifactId>springboot-microservices-restaurant</artifactId>
-		<version>1.0.0</version>
-	</parent>
+    <parent>
+        <groupId>com.regev</groupId>
+        <artifactId>springboot-microservices-restaurant</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-	<groupId>com.restaurant.apiGateway</groupId>
-	<artifactId>api-gateway-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>API Gateway Service</name>
-	<description>Spring Cloud Gateway for routing and JWT validation</description>
+    <groupId>com.restaurant.apiGateway</groupId>
+    <artifactId>api-gateway-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>API Gateway Service</name>
+    <description>Spring Cloud Gateway for routing and JWT validation</description>
 
-	<dependencies>
-		<!-- Spring Cloud Gateway -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
-		</dependency>
+    <dependencies>
+        <!-- ✅ Reactive Gateway stack -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ✅ Shared exception module -->
+        <dependency>
+            <groupId>com.regev</groupId>
+            <artifactId>common-exception</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

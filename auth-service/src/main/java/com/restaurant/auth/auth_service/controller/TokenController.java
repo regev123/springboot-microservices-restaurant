@@ -38,7 +38,7 @@ public class TokenController {
      *           <li>HTTP 403 (Forbidden) if the token is outdated</li>
      *         </ul>
      */
-    @PostMapping("/validate-token-timestamp")
+    @PostMapping("/validateTokenTimestamp")
     public ResponseEntity<String> validateTokenIssuedAt(@RequestBody TokenValidationRequest request) {
         return tokenValidationService.isTokenValid(request);
     }

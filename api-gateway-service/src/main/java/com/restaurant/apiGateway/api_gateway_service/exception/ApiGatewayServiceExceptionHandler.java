@@ -1,5 +1,6 @@
 package com.restaurant.apiGateway.api_gateway_service.exception;
 
+import com.restaurant.common.exception.GlobalExceptionHandler;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -8,25 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
-
-    /**
-     * Helper method to build consistent error responses
-     */
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String error, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", error);
-        body.put("message", message);
-        return new ResponseEntity<>(body, status);
-    }
-
+public class ApiGatewayServiceExceptionHandler extends GlobalExceptionHandler {
     // ========================= JWT SPECIFIC EXCEPTIONS ========================= //
 
     /**
@@ -34,7 +20,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<Map<String, Object>> handleExpiredJwtException(ExpiredJwtException ex) {
-        return buildResponse(
+        return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "JWT Token Expired",
                 "The provided token has expired. Please log in again."
@@ -46,7 +32,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<Map<String, Object>> handleMalformedJwtException(MalformedJwtException ex) {
-        return buildResponse(
+        return buildErrorResponse(
                 HttpStatus.FORBIDDEN,
                 "Malformed JWT Token",
                 "The provided token is malformed and cannot be processed."
@@ -58,7 +44,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(UnsupportedJwtException.class)
     public ResponseEntity<Map<String, Object>> handleUnsupportedJwtException(UnsupportedJwtException ex) {
-        return buildResponse(
+        return buildErrorResponse(
                 HttpStatus.FORBIDDEN,
                 "Unsupported JWT Token",
                 "The provided token format is not supported."
@@ -70,7 +56,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
-        return buildResponse(
+        return buildErrorResponse(
                 HttpStatus.FORBIDDEN,
                 "Invalid JWT Signature",
                 "The JWT signature is invalid or has been tampered with."
@@ -82,7 +68,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildResponse(
+        return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Invalid Token",
                 "The token is empty or invalid."
@@ -91,32 +77,13 @@ public class GlobalExceptionHandler {
 
     // ========================= CUSTOM TOKEN VALIDATION EXCEPTIONS ========================= //
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, "User Not Found", ex.getMessage());
-    }
-
     @ExceptionHandler(TokenOutdatedException.class)
     public ResponseEntity<Map<String, Object>> handleTokenOutdated(TokenOutdatedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Token Outdated", ex.getMessage());
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Token Outdated", ex.getMessage());
     }
 
     @ExceptionHandler(TokenValidationException.class)
     public ResponseEntity<Map<String, Object>> handleTokenValidationError(TokenValidationException ex) {
-        return buildResponse(HttpStatus.BAD_GATEWAY, "Token Validation Error", ex.getMessage());
-    }
-
-    // ========================= GLOBAL FALLBACK ========================= //
-
-    /**
-     * Fallback for all other unhandled exceptions.
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
-        return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error",
-                ex.getMessage()
-        );
+        return buildErrorResponse(HttpStatus.BAD_GATEWAY, "Token Validation Error", ex.getMessage());
     }
 }

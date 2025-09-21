@@ -23,19 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-
-    /**
-     * Registers a new user.
-     *
-     * @param request the registration details (validated)
-     * @return an authentication response containing a JWT token
-     */
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        log.info("Registering user with email: {}", request.getEmail());
-        return ResponseEntity.ok(authService.register(request));
-    }
-
     /**
      * Authenticates a user and returns a JWT token.
      *
@@ -44,7 +31,6 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        log.info("User attempting to login with email: {}", request.getEmail());
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -54,9 +40,8 @@ public class AuthController {
      * @param request contains the email, old password, and new password (validated)
      * @return an authentication response containing a new JWT token
      */
-    @PostMapping("/change-password")
-    public ResponseEntity<AuthResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        log.info("Password change requested for email: {}", request.getEmail());
+    @PostMapping("/changePassword")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         return ResponseEntity.ok(authService.changePassword(request));
     }
 
@@ -68,7 +53,6 @@ public class AuthController {
      */
     @GetMapping("/user")
     public ResponseEntity<UserResponse> getUser(@RequestHeader("X-User-Email") String userEmail) {
-        log.info("Fetching user details for email: {}", userEmail);
         return ResponseEntity.ok(authService.getUserByEmail(userEmail));
     }
 }

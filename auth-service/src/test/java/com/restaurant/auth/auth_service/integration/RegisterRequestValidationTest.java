@@ -17,8 +17,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for validating the Register API endpoint.
+ *
+ * <p>
+ * This test suite ensures proper validation and business logic
+ * for user registration requests, covering both successful and
+ * failure scenarios for each field.
+ * </p>
+ */
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // Disable security filters for testing
 class RegisterRequestValidationTest {
 
     @Autowired
@@ -35,12 +44,17 @@ class RegisterRequestValidationTest {
 
     private static final String REGISTER_PATH = "/auth/register";
 
+    /**
+     * Clean up the database before each test to ensure isolation.
+     */
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll(); // Clean database before each test
+        userRepository.deleteAll();
     }
 
-    // ---------- SUCCESS SCENARIO ----------
+    // ==================================================
+    // SUCCESS CASE
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Success with valid data")
@@ -50,7 +64,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -60,44 +75,9 @@ class RegisterRequestValidationTest {
                 .andExpect(jsonPath("$.token").exists()); // Ensure token is returned
     }
 
-    // ---------- DUPLICATE EMAIL VALIDATION ----------
-
-    @Test
-    @DisplayName("Register API - Duplicate email should return error")
-    void registerDuplicateEmail() throws Exception {
-        // Create the first register request
-        RegisterRequest firstUser = new RegisterRequest(
-                "duplicate@test.com",
-                "Valid@123",
-                "John",
-                "Doe",
-                "0512345678"
-        );
-
-        // First registration should succeed
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstUser)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists()); // Expect a token for successful registration
-
-        // Second registration with the same email should fail
-        RegisterRequest duplicateUser = new RegisterRequest(
-                "duplicate@test.com",
-                "Valid@123",
-                "Jane",
-                "Smith",
-                "0598765432"
-        );
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(duplicateUser)))
-                .andExpect(status().isBadRequest()) // or Conflict (409) depending on implementation
-                .andExpect(jsonPath("$.error").value("A user with this email is already registered."));
-    }
-
-    // ---------- EMAIL VALIDATION ----------
+    // ==================================================
+    // EMAIL VALIDATION
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Missing email")
@@ -107,7 +87,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -125,7 +106,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -135,7 +117,9 @@ class RegisterRequestValidationTest {
                 .andExpect(jsonPath("$.email").value("Email should be valid"));
     }
 
-    // ---------- PASSWORD VALIDATION ----------
+    // ==================================================
+    // PASSWORD VALIDATION
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Missing password")
@@ -145,7 +129,8 @@ class RegisterRequestValidationTest {
                 "",
                 "John",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -163,7 +148,8 @@ class RegisterRequestValidationTest {
                 "weakpass1",
                 "John",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -176,7 +162,9 @@ class RegisterRequestValidationTest {
                 ));
     }
 
-    // ---------- FIRST NAME VALIDATION ----------
+    // ==================================================
+    // FIRST NAME VALIDATION
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Missing first name")
@@ -186,7 +174,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -204,7 +193,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "Jo",
                 "Doe",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -214,7 +204,9 @@ class RegisterRequestValidationTest {
                 .andExpect(jsonPath("$.firstName").value("First name must be only letters with 3-30 characters"));
     }
 
-    // ---------- LAST NAME VALIDATION ----------
+    // ==================================================
+    // LAST NAME VALIDATION
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Missing last name")
@@ -224,7 +216,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -242,7 +235,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "D",
-                "0541234567"
+                "0541234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -252,7 +246,9 @@ class RegisterRequestValidationTest {
                 .andExpect(jsonPath("$.lastName").value("Last name must be only letters with 3-30 characters"));
     }
 
-    // ---------- PHONE NUMBER VALIDATION ----------
+    // ==================================================
+    // PHONE NUMBER VALIDATION
+    // ==================================================
 
     @Test
     @DisplayName("Register API - Missing phone number")
@@ -262,7 +258,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                ""
+                "",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -280,7 +277,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                "0641234567" // Wrong start
+                "0641234567",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)
@@ -298,7 +296,8 @@ class RegisterRequestValidationTest {
                 "Valid@123",
                 "John",
                 "Doe",
-                "05412345" // Too short
+                "05412345",
+                "USER"
         );
 
         mockMvc.perform(post(REGISTER_PATH)

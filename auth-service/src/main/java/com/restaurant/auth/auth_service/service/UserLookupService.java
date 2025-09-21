@@ -1,6 +1,7 @@
 package com.restaurant.auth.auth_service.service;
 
 import com.restaurant.auth.auth_service.entity.UserEntity;
+import com.restaurant.common.exception.UserNotFoundException;
 import com.restaurant.auth.auth_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,11 +21,11 @@ public class UserLookupService {
      *
      * @param email the email of the user to find
      * @return the UserEntity associated with the given email
-     * @throws IllegalArgumentException if no user is found with the provided email
+     * @throws UserNotFoundException if no user is found with the provided email
      */
     public UserEntity getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     /**
@@ -36,6 +37,6 @@ public class UserLookupService {
      */
     public UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
     }
 }
