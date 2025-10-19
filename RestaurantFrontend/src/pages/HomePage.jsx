@@ -1,14 +1,12 @@
-import React from "react";
-import PageWrapper from "../components/layout/PageWrapper";
-import Card from "../components/common/Card";
-import { useSelector } from "react-redux";
+import React from 'react';
+import PageLayout from '../components/layout/PageLayout/PageLayout';
+import Card from '../components/layout/Card/Card';
+import { useSelector } from 'react-redux';
 
 const HomePage = () => {
   const { firstName, lastName } = useSelector((state) => state.auth.user) || {};
   return (
-    <PageWrapper
-      title={`Welcome, ${firstName} ${lastName} 👋`}
-    >
+    <PageLayout title={`Welcome, ${firstName} ${lastName} 👋`}>
       <section className="home-grid">
         <Card title="Profile">
           <p>Manage your account settings and personal information.</p>
@@ -26,7 +24,7 @@ const HomePage = () => {
           <p>Customize your preferences and application behavior.</p>
         </Card>
       </section>
-    </PageWrapper>
+    </PageLayout>
   );
 };
 

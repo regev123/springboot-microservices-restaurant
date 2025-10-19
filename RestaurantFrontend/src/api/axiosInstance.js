@@ -1,42 +1,54 @@
-import axios from "axios";
+import axios from 'axios';
 
+/**
+ * Axios instance configured for the application's API.
+ */
 const api = axios.create({
-  baseURL: "http://localhost:8081/api", // base API URL
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: 'http://localhost:8081/api',
+  headers: { 'Content-Type': 'application/json' },
 });
 
+/**
+ * Adds the Authorization header with JWT token (if available).
+ */
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
+/**
+ * Handles API response and error transformation into readable messages.
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    let message = "Unexpected error occurred";
-
-    if (error.response) {
-      const data = error.response.data;
-
-      if (Array.isArray(data?.messages)) {
-        message = data.messages.join(", ");
-      } else {
-        message = data?.message || `Request failed with status ${error.response.status}`;
-      }
-    } else if (error.request) {
-      message = "No response from server. Please check your connection.";
-    } else {
-      message = error.message;
-    }
-
+    const message = getErrorMessage(error);
     return Promise.reject(new Error(message));
   }
 );
 
+/**
+ * Extracts a user-friendly message from Axios error objects.
+ *
+ * @param {object} error - Axios error object
+ * @returns {string} Readable error message
+ */
+function getErrorMessage(error) {
+  if (error.response) {
+    const { data, status } = error.response;
+
+    if (Array.isArray(data?.messages)) return data.messages.join(', ');
+    if (data?.message) return data.message;
+
+    return `Request failed with status ${status}`;
+  }
+
+  if (error.request) {
+    return 'No response from server. Please check your internet connection.';
+  }
+
+  return error.message || 'An unexpected error occurred.';
+}
 
 export default api;

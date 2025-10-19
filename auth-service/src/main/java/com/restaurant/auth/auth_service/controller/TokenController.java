@@ -7,13 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for handling JWT token validation operations.
+ * REST controller that provides JWT token validation endpoints.
  *
  * <p>
- * This controller exposes an endpoint to validate whether a JWT token
- * is still valid based on its {@code issuedAt} timestamp compared to
- * the user's last password modification date.
+ * Verifies whether a JWT token remains valid based on the token's
+ * {@code issuedAt} timestamp and the user's last password modification date.
  * </p>
+ *
+ * <p><b>Access Control:</b> Typically used internally by other services
+ * to validate authentication state.</p>
  */
 @RestController
 @RequestMapping("/auth")
@@ -22,24 +24,29 @@ public class TokenController {
 
     private final TokenValidationService tokenValidationService;
 
+    // ---------------------------------------------------------------------
+    // Endpoint: Validate Token Timestamp
+    // ---------------------------------------------------------------------
+
     /**
-     * Validates a JWT token by checking if the token's {@code issuedAt} timestamp
-     * is after the user's last password change.
+     * Validates a JWT token by comparing its {@code issuedAt} timestamp
+     * with the user's last password modification date.
      *
      * <p>
-     * If the token was issued before the last password update, it is considered
-     * invalid and access will be denied.
+     * If the token was issued before the user's last password update,
+     * it is considered outdated and access should be denied.
      * </p>
      *
-     * @param request contains the user's email and the token's issued timestamp
-     * @return a {@link ResponseEntity} containing:
+     * @param request the {@link TokenValidationRequest} containing the user's email
+     *                and the token's issued timestamp
+     * @return {@link ResponseEntity} containing:
      *         <ul>
-     *           <li>HTTP 200 (OK) if the token is valid</li>
-     *           <li>HTTP 403 (Forbidden) if the token is outdated</li>
+     *             <li>HTTP 200 (OK) if the token is valid</li>
+     *             <li>HTTP 403 (Forbidden) if the token is outdated</li>
      *         </ul>
      */
     @PostMapping("/validateTokenTimestamp")
     public ResponseEntity<String> validateTokenIssuedAt(@RequestBody TokenValidationRequest request) {
-        return tokenValidationService.isTokenValid(request);
+        return tokenValidationService.validateToken(request);
     }
 }

@@ -63,18 +63,6 @@ public class ApiGatewayServiceExceptionHandler extends GlobalExceptionHandler {
         );
     }
 
-    /**
-     * Handles cases where a token is empty or missing.
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Invalid Token",
-                "The token is empty or invalid."
-        );
-    }
-
     // ========================= CUSTOM TOKEN VALIDATION EXCEPTIONS ========================= //
 
     @ExceptionHandler(TokenOutdatedException.class)

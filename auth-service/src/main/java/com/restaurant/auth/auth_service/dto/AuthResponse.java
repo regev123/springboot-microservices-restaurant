@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>
  * This DTO is returned after a successful authentication or registration process.
- * It contains the generated JWT token that the client will use to
- * access protected resources.
+ * It contains the generated JWT token and user details that the client will use to
+ * access protected resources and display user information.
  * </p>
  */
 @Data
@@ -30,4 +30,14 @@ public class AuthResponse {
      * </p>
      */
     private final String token;
+
+    /**
+     * Detailed user information returned after successful authentication.
+     *
+     * <p>
+     * This contains the user's profile data including name, email, role,
+     * and other relevant information needed by the client application.
+     * </p>
+     */
+    private final UserDetailsDto user;
 }

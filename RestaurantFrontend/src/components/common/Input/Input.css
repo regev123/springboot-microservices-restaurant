@@ -1,0 +1,48 @@
+/* Autofill detection and styling */
+@keyframes onAutoFillStart {
+  from {
+    /**/
+  }
+  to {
+    /**/
+  }
+}
+
+/* Aggressive autofill override - works in most browsers */
+input.autofill-detection:-webkit-autofill,
+input.autofill-detection:-webkit-autofill:hover,
+input.autofill-detection:-webkit-autofill:focus,
+input.autofill-detection:-webkit-autofill:active {
+  animation-name: onAutoFillStart;
+  animation-duration: 0.001s;
+  -webkit-box-shadow: inset 0 0 0px 1000px rgba(30, 41, 59, 0.6) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Alternative approach using filter */
+input.autofill-detection:-webkit-autofill {
+  filter: none !important;
+}
+
+/* For Firefox and other browsers */
+input.autofill-detection:autofill {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+}
+
+/* Additional fallback */
+input[data-autofilled] {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  color: #ffffff !important;
+}

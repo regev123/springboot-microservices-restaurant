@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor        // Generates a constructor for final fields
 public class UserResponse {
 
+    /** The unique identifier of the user */
+    private final Long id;
+
     /** The unique email address of the user */
     private final String email;
 

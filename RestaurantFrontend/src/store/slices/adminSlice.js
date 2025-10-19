@@ -1,5 +1,18 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchUsers, deleteUser, updateUserRole, registerUser } from '../thunks/adminThunks';
+import { fetchUsers, deleteUser, updateUser, registerUser } from '../thunks/adminThunks';
+
+const setPending = (state) => {
+  state.loading = true;
+};
+
+const setFulfilled = (state, updates = {}) => {
+  state.loading = false;
+  Object.assign(state, updates);
+};
+
+const setRejected = (state, action) => {
+  state.loading = false;
+};
 
 const adminSlice = createSlice({
   name: 'admin',
@@ -7,48 +20,37 @@ const adminSlice = createSlice({
     users: [],
     roles: [],
     loading: false,
-    error: null,
-    message: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUsers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // FETCH USERS
+      .addCase(fetchUsers.pending, (state) => setPending(state))
       .addCase(fetchUsers.fulfilled, (state, action) => {
-        console.log('Fetched users:', action.payload);
-        state.loading = false;
-        state.users = action.payload.users;
-        state.roles = action.payload.roles;
+        setFulfilled(state, { users: action.payload.users, roles: action.payload.roles });
       })
-      .addCase(fetchUsers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-        state.message = null;
-      })
+      .addCase(fetchUsers.rejected, (state, action) => setRejected(state, action))
 
+      // DELETE USER
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.users = state.users.filter((u) => u.id !== action.payload);
-        state.message = 'User deleted successfully';
-        state.error = null;
       })
 
-      .addCase(updateUserRole.fulfilled, (state, action) => {
-        const { userId, newRole } = action.payload;
-        state.users = state.users.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
-        state.message = 'User role updated successfully';
-        state.error = null;
+      // UPDATE USER
+      .addCase(updateUser.fulfilled, (state, action) => {
+        const updatedUser = action.payload;
+        state.users = state.users.map((u) =>
+          u.id === updatedUser.id ? { ...u, ...updatedUser } : u
+        );
       })
 
-      .addCase(registerUser.fulfilled, (state) => {
-        state.message = 'New user register successfully';
-        state.error = null;
+      // REGISTER USER
+      .addCase(registerUser.fulfilled, (state, action) => {
+        const newUser = action.payload;
+        state.users.push(newUser);
       })
       .addCase(registerUser.rejected, (state, action) => {
-        state.message = null;
-        state.error = action.payload;
+        setRejected(state, action);
       });
   },
 });

@@ -12,10 +12,15 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 
 /**
- * Service responsible for generating JWT tokens.
+ * Service responsible for generating JSON Web Tokens (JWT) for authenticated users.
  *
- * <p>This class handles JWT creation for authenticated users,
- * embedding essential claims like username and role inside the token.</p>
+ * <p>
+ * This service creates cryptographically signed tokens that contain user-specific claims
+ * such as email (subject) and role, using HMAC SHA-256 for signing.
+ * </p>
+ *
+ * <p><b>Security Note:</b> The secret key is defined in {@link JwtProperties} and should be
+ * securely managed via environment variables or configuration management tools.</p>
  */
 @Service("authJwtService")
 @RequiredArgsConstructor
@@ -24,20 +29,36 @@ public class JwtService {
     private final JwtProperties jwtProperties;
     private final UserLookupService userLookupService;
 
+    // ---------------------------------------------------------------------
+    // Token Generation
+    // ---------------------------------------------------------------------
+
     /**
-     * Generates a signed JWT token for a given user.
+     * Generates a signed JWT token for the given authenticated user.
      *
-     * @param user the authenticated user details
-     * @return a signed JWT token containing the user's email and role
+     * <p>
+     * The generated token includes:
+     * <ul>
+     *     <li><b>Subject:</b> The user's email</li>
+     *     <li><b>Role Claim:</b> The user's assigned role</li>
+     *     <li><b>Issued At:</b> The token creation time</li>
+     *     <li><b>Expiration:</b> A future timestamp based on configured TTL</li>
+     * </ul>
+     * </p>
+     *
+     * @param user the {@link UserDetails} representing the authenticated user
+     * @return a signed JWT token containing encoded user details
      */
     public String generateToken(UserDetails user) {
         UserEntity userEntity = userLookupService.getUserByEmail(user.getUsername());
+        Date now = new Date();
+        Date expiration = new Date(System.currentTimeMillis() + jwtProperties.getExpiration());
 
         return Jwts.builder()
                 .setSubject(user.getUsername()) // Subject represents the user's email
-                .claim("role", userEntity.getRole()) // Include the user's role as a claim
-                .setIssuedAt(new Date()) // Token creation timestamp
-                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration())) // Token expiration
+                .claim("role", userEntity.getRole()) // Include the user's role claim
+                .setIssuedAt(now)
+                .setExpiration(expiration)
                 .signWith(
                         Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes()),
                         SignatureAlgorithm.HS256

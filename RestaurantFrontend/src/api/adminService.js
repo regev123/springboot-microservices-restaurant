@@ -1,26 +1,16 @@
 import api from './axiosInstance';
 
 const adminService = {
-  getAllUsers: async () => {
-    const response = await api.get('/auth/admin/users');
-    return response.data;
+  getAllUsers: async () => (await api.get('/auth/admin/users')).data,
+
+  deleteUser: async (userId) => (await api.delete(`/auth/admin/user/${userId}/delete`)).data,
+
+  updateUser: async (updateUserObject) => {
+    await api.put('/auth/admin/user/update', updateUserObject);
+    return updateUserObject;
   },
 
-  deleteUser: async (userId) => {
-    const response = await api.delete(`/auth/admin/users/${userId}`);
-    return response.data;
-  },
-
-  updateUserRole: async (userId, newRole) => {
-    const response = await api.put(`/auth/admin/users/${userId}/role`, { newRole });
-    return response.data;
-  },
-
-  registerUser: async (newUser) => {
-    console.log('Registering user:', newUser);
-    const response = await api.post(`/auth/admin/register`, newUser);
-    return response.data;
-  },
+  registerUser: async (newUser) => (await api.post(`/auth/admin/register`, newUser)).data,
 };
 
 export default adminService;

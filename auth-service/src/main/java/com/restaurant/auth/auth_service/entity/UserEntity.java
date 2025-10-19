@@ -37,12 +37,15 @@ public class UserEntity implements UserDetails {
     private String password;
 
     /** User's first name */
+    @Column(nullable = false)
     private String firstName;
 
     /** User's last name */
+    @Column(nullable = false)
     private String lastName;
 
     /** User's phone number */
+    @Column(nullable = false, unique = true)
     private String phoneNumber;
 
     /** Timestamp when the user was created (immutable) */

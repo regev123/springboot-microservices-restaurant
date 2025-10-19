@@ -27,4 +27,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return list of users excluding the user with the given email
      */
     List<UserEntity> findByEmailNot(String email);
+
+    /**
+     * Finds a user by their phone number.
+     *
+     * @param phoneNumber the phone number to search for
+     * @return an {@link Optional} containing the user if found, or empty if not
+     */
+    Optional<UserEntity> findByPhoneNumber(String phoneNumber);
 }

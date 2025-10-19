@@ -1,84 +1,77 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, changePassword, fetchUser } from "../thunks/authThunks.js";
-import { resetStatusAll } from "../globalActions";
+import { createSlice } from '@reduxjs/toolkit';
+import { loginUser, changePassword, fetchUser } from '../thunks/authThunks.js';
+
+const setFulfilled = (state, updates = {}) => {
+  Object.assign(state, updates);
+};
+
+const clearAuth = (state) => {
+  state.user = null;
+  state.token = null;
+  localStorage.removeItem('token');
+};
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState: {
     user: null,
-    token: localStorage.getItem("token") || null,
-    loading: false,
-    error: null,
-    message: null,
+    token: localStorage.getItem('token') || null,
+    isFetchingUser: false,
+    shouldForceLogout: false,
   },
   reducers: {
     logout: (state) => {
-      state.user = null;
-      localStorage.removeItem("token");
+      clearAuth(state);
+      state.shouldForceLogout = false;
+    },
+    resetAllStore: () => {
+      // This will be handled by the root reducer
+      return {
+        user: null,
+        token: null,
+        isFetchingUser: false,
+        shouldForceLogout: false,
+      };
     },
   },
   extraReducers: (builder) => {
     builder
-      // login
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // LOGIN
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.token = action.payload.token;
+        setFulfilled(state, { token: action.payload.token, user: action.payload.user });
+        localStorage.setItem('token', action.payload.token);
+        state.shouldForceLogout = false;
       })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Login failed";
-      })
-      
-      // fetch user
+
+      // FETCH USER
       .addCase(fetchUser.pending, (state) => {
-        state.loading = true;
+        state.isFetchingUser = true;
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
+        state.isFetchingUser = false;
+        setFulfilled(state, { user: action.payload });
+        state.shouldForceLogout = false;
       })
       .addCase(fetchUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = "Failed to fetch user Please login again.";
-        
-        console.log("Fetch user rejected:", action.payload, action.meta?.response);
-        // ✅ Auto-logout if token invalid/expired
-        if (
-          action.payload?.includes("401") ||
-          action.payload?.includes("failed")
-        ) {
-          state.user = null;
-          state.token = null;
-          localStorage.removeItem("token");
+        state.isFetchingUser = false;
+        if (state.token) {
+          state.shouldForceLogout = true;
         }
       })
 
-      // change password
-      .addCase(changePassword.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.message = null;
-      })
-      .addCase(changePassword.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = "Password changed successfully";
+      // CHANGE PASSWORD
+      .addCase(changePassword.fulfilled, (state) => {
+        setFulfilled(state);
+        clearAuth(state);
+        state.shouldForceLogout = false;
       })
       .addCase(changePassword.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Password change failed";
-      })
-
-      // ✅ Listen to the global reset action
-      .addCase(resetStatusAll, (state) => {
-        state.error = null;
-        state.message = null;
+        if (action.payload?.includes('401')) {
+          clearAuth(state);
+        }
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, resetAllStore } = authSlice.actions;
 export default authSlice.reducer;

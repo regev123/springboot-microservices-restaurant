@@ -1,11 +1,12 @@
 package com.restaurant.auth.auth_service.service;
 
-import com.restaurant.auth.auth_service.dto.*;
+import com.restaurant.auth.auth_service.dto.RegisterRequest;
+import com.restaurant.auth.auth_service.dto.UpdateUserRequest;
+import com.restaurant.auth.auth_service.dto.UserDetailsDto;
 import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.entity.UserEntity;
-import com.restaurant.auth.auth_service.exceptions.UserAlreadyExistsException;
+import com.restaurant.auth.auth_service.mapper.UserMapper;
 import com.restaurant.auth.auth_service.repository.UserRepository;
-import com.restaurant.common.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service that provides administrative operations such as
- * updating user roles and managing user listings.
+ * Service that provides administrative operations for managing users and roles.
+ *
+ * <p>
+ * This service includes operations such as:
+ * <ul>
+ *   <li>Updating user roles</li>
+ *   <li>Listing users (excluding the current one)</li>
+ *   <li>Deleting users</li>
+ *   <li>Registering new users</li>
+ * </ul>
+ * </p>
  */
 @Service
 @RequiredArgsConstructor
@@ -26,84 +36,124 @@ public class AdminService {
     private final UserRepository userRepository;
     private final UserLookupService userLookupService;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+
+    // ---------------------------------------------------------------------
+    // Update User Information
+    // ---------------------------------------------------------------------
 
     /**
-     * Updates the role of a specific user.
+     * Updates the information of a specific user.
      *
-     * @param userId  the ID of the user whose role will be updated
-     * @param request contains the new role to assign
+     * <p>Updates the user's first name, last name, phone number, and role.
+     * Email and password are not updated through this method.</p>
+     *
+     * @param request the {@link UpdateUserRequest} containing the user ID and updated information
+     * @throws com.restaurant.common.exception.UserNotFoundException if the user does not exist
      */
-    public UpdateUserRoleResponse updateUserRole(Long userId, UpdateUserRoleRequest request) {
-        UserEntity user = userLookupService.getUserById(userId);
-        user.setRole(request.getNewRole());
+    public void updateUser(UpdateUserRequest request) {
+        UserEntity user = userLookupService.getUserById(request.getId());
+        
+        // Validate phone number uniqueness (excluding current user)
+        userLookupService.validatePhoneNumberUniquenessExcludingUser(request.getPhoneNumber(), request.getId());
+        
+        // Update user fields (excluding email and password)
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setRole(request.getRole());
+        
         userRepository.save(user);
-        return new UpdateUserRoleResponse(userId,request.getNewRole());
     }
 
+    // ---------------------------------------------------------------------
+    // Retrieve All Users (Excluding Current)
+    // ---------------------------------------------------------------------
+
     /**
-     * Retrieves all users except the currently logged-in user.
+     * Retrieves all users excluding the currently logged-in user.
      *
-     * @param currentEmail the email of the current logged-in user
-     * @return a list of all users excluding the current one
+     * @param currentEmail the email address of the currently authenticated user
+     * @return a list of {@link UserDetailsDto} excluding the current user
      */
     public List<UserDetailsDto> getAllUsersExcludingCurrent(String currentEmail) {
-        return toUserDetailsDtoList(userRepository.findByEmailNot(currentEmail));
+        List<UserEntity> users = userRepository.findByEmailNot(currentEmail);
+        return mapToUserDetailsDtoList(users);
     }
 
-    public static List<UserDetailsDto> toUserDetailsDtoList(List<UserEntity> entities) {
-        return entities.stream()
-                .map(user -> new UserDetailsDto(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getPhoneNumber(),
-                        user.getRole(),
-                        user.getCreatedDate(),
-                        user.getPasswordModifiedDate()
-                ))
+    /**
+     * Maps a list of {@link UserEntity} objects to {@link UserDetailsDto} objects.
+     *
+     * @param users list of user entities
+     * @return a list of user detail DTOs
+     */
+    private List<UserDetailsDto> mapToUserDetailsDtoList(List<UserEntity> users) {
+        return users.stream()
+                .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    public List<String> getAllRolesList() {
-        return Arrays.stream(Role.values()).map(Enum::name).toList();
+    // ---------------------------------------------------------------------
+    // Retrieve All Roles
+    // ---------------------------------------------------------------------
+
+    /**
+     * Retrieves all available roles defined in the system.
+     *
+     * @return a list of {@link Role} values
+     */
+    public List<Role> getAllRolesList() {
+        return Arrays.asList(Role.values());
     }
 
+    // ---------------------------------------------------------------------
+    // Delete User
+    // ---------------------------------------------------------------------
+
+    /**
+     * Deletes a user by their unique ID.
+     *
+     * @param userId the ID of the user to delete
+     * @throws com.restaurant.common.exception.UserNotFoundException if the user does not exist
+     */
     public void deleteUser(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException("User with ID " + userId + " not found");
-        }
+        userLookupService.isUserExistById(userId);
         userRepository.deleteById(userId);
     }
 
-    /**
-     * Registers a new user and returns a JWT token for authentication.
-     *
-     * @param request registration request containing user details
-     */
-    public void register(RegisterRequest request) {
-        validateEmailUniqueness(request.getEmail());
+    // ---------------------------------------------------------------------
+    // Register New User
+    // ---------------------------------------------------------------------
 
-        UserEntity user = buildNewUser(request);
-        userRepository.save(user);
+    /**
+     * Registers a new user in the system.
+     *
+     * <p>
+     * The password is securely encoded before saving the user to the database.
+     * </p>
+     *
+     * @param request the {@link RegisterRequest} containing new user details
+     * @return {@link UserDetailsDto} containing the created user's details
+     * @throws com.restaurant.auth.auth_service.exceptions.UserAlreadyExistsException
+     *         if a user with the same email already exists
+     */
+    public UserDetailsDto register(RegisterRequest request) {
+        userLookupService.validateEmailUniqueness(request.getEmail());
+        userLookupService.validatePhoneNumberUniqueness(request.getPhoneNumber());
+        UserEntity newUser = buildNewUser(request);
+        UserEntity savedUser = userRepository.save(newUser);
+        return userMapper.toDto(savedUser);
     }
 
-    /**
-     * Ensures that no other user exists with the same email.
-     *
-     * @param email email to validate
-     */
-    private void validateEmailUniqueness(String email) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new UserAlreadyExistsException("A user with this email is already registered.");
-        }
-    }
+    // ---------------------------------------------------------------------
+    // Helper Method: Build New User Entity
+    // ---------------------------------------------------------------------
 
     /**
-     * Builds a new user entity from the registration request.
+     * Builds a new {@link UserEntity} from a registration request.
      *
-     * @param request registration data
-     * @return a new UserEntity instance
+     * @param request the registration data
+     * @return a fully initialized {@link UserEntity} instance
      */
     private UserEntity buildNewUser(RegisterRequest request) {
         Instant now = Instant.now();

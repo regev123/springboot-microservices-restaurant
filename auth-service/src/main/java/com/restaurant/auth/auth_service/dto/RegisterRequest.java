@@ -23,7 +23,7 @@ public class RegisterRequest {
      * The user's email.
      * <p>Must be provided and follow a valid email format.</p>
      */
-    @NotBlank(message = "Email is requiredD")
+    @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     private final String email;
 

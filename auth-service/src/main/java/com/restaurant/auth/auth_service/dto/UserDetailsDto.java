@@ -42,7 +42,4 @@ public class UserDetailsDto {
 
     /** Timestamp when the user account was created */
     private Instant createdDate;
-
-    /** Timestamp of the last password change */
-    private Instant passwordModifiedDate;
 }

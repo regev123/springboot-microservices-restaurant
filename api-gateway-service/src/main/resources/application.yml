@@ -17,6 +17,13 @@ spring:
               filters:
                 - StripPrefix=1
 
+            - id: menu-service
+              uri: ${menu.service.url}
+              predicates:
+                - Path=/api/menu/**
+              filters:
+                - StripPrefix=1
+
           globalcors:
             add-to-simple-url-handler-mapping: true
             cors-configurations:

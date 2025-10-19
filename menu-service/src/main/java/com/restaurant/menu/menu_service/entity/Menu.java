@@ -6,14 +6,22 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "menus")
+@Table(
+        name = "menus",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"name"})
+        }
+)
 @Data
+/**
+ * JPA entity representing a menu with status and audit timestamps.
+ */
 public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Enumerated(EnumType.STRING)

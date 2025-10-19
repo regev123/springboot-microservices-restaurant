@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.restaurant</groupId>
+        <artifactId>springboot-microservices-restaurant</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <groupId>com.restaurant</groupId>
+    <artifactId>common-service</artifactId>
+    <version>1.0.0</version>
+    <name>Common Service</name>
+    <description>Shared utilities, mappers, exceptions, and common components for all microservices</description>
+
+    <dependencies>
+        <!-- Spring Boot Starter Web for REST components -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter AOP for aspect-oriented programming -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

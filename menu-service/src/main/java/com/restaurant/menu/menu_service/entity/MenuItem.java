@@ -12,6 +12,9 @@ import java.util.List;
 @Entity
 @Table(name = "menu_items")
 @Data
+/**
+ * JPA entity representing an item within a menu.
+ */
 public class MenuItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +24,7 @@ public class MenuItem {
     @JoinColumn(name = "menu_id")
     private Menu menu;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -35,10 +38,13 @@ public class MenuItem {
 
     private boolean isAvailable = true;
 
-    @ElementCollection
-    @CollectionTable(name = "menu_item_tags", joinColumns = @JoinColumn(name = "menu_item_id"))
-    @Column(name = "tag")
-    private List<String> tags = new ArrayList<>();
+    @OneToMany(
+            mappedBy = "menuItem",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Ingredient> ingredients = new ArrayList<>();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

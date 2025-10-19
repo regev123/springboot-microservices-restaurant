@@ -1,6 +1,7 @@
 package com.restaurant.auth.auth_service.controller;
 
 import com.restaurant.auth.auth_service.dto.*;
+import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.service.AdminService;
 import com.restaurant.auth.auth_service.util.AuthorizationUtil;
 import jakarta.validation.Valid;
@@ -12,12 +13,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST controller for administrative operations related to users.
+ * REST controller that exposes administrative endpoints for managing users.
  *
  * <p>
- * Provides endpoints for managing user roles and retrieving a list of all users,
- * excluding the currently authenticated admin.
+ * Provides APIs for performing user-related administrative actions such as:
+ * <ul>
+ *     <li>Updating user roles</li>
+ *     <li>Retrieving all users (excluding the current admin)</li>
+ *     <li>Deleting users</li>
+ *     <li>Registering new users</li>
+ * </ul>
  * </p>
+ *
+ * <p><b>Access Control:</b> All endpoints are restricted to users with the ADMIN role.</p>
  */
 @RestController
 @RequestMapping("/auth/admin")
@@ -27,66 +35,101 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AuthorizationUtil authorizationUtil;
-    /**
-     * Updates the role of a specific user.
-     *
-     * <p>Only accessible to users with the ADMIN role.</p>
-     *
-     * @param userId  the ID of the user whose role will be updated
-     * @param request contains the new role for the user
-     * @return HTTP 200 OK with a success message
-     */
-    @PutMapping("/users/{userId}/role")
-    public ResponseEntity<UpdateUserRoleResponse> updateUserRole(
-            @RequestHeader("X-User-Role") String userRole,
-            @PathVariable("userId") Long userId,
-            @Valid @RequestBody UpdateUserRoleRequest request
-    ) {
-        authorizationUtil.checkRole(userRole,"ADMIN");
-        return ResponseEntity.ok(adminService.updateUserRole(userId, request));
-    }
+
+    // ---------------------------------------------------------------------
+    // Endpoint: Update User Information
+    // ---------------------------------------------------------------------
 
     /**
-     * Retrieves all users excluding the currently logged-in admin.
+     * Updates the information of a specific user.
+     *
+     * <p>Only accessible to users with the ADMIN role.</p>
+     * <p>Updates user's first name, last name, phone number, and role.</p>
+     * <p>Email and password are not updatable through this endpoint.</p>
+     *
+     * @param userRole the role of the authenticated user (from request header)
+     * @param request  the payload containing the user ID and updated information
+     * @return {@link ResponseEntity} with status 204 (No Content) if successful
+     */
+    @PutMapping("/user/update")
+    public ResponseEntity<Void> updateUser(
+            @RequestHeader("X-User-Role") String userRole,
+            @Valid @RequestBody UpdateUserRequest request
+    ) {
+        authorizationUtil.checkRole(userRole, "ADMIN");
+        adminService.updateUser(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ---------------------------------------------------------------------
+    // Endpoint: Retrieve All Users (Excluding Current)
+    // ---------------------------------------------------------------------
+
+    /**
+     * Retrieves all registered users excluding the currently authenticated admin.
      *
      * <p>Only accessible to users with the ADMIN role.</p>
      *
-     * @return a list of all users excluding the currently authenticated admin
+     * @param userRole  the role of the authenticated user (from request header)
+     * @param userEmail the email of the authenticated user (from request header)
+     * @return {@link ResponseEntity} containing a {@link UsersWithRolesResponse}
      */
     @GetMapping("/users")
     public ResponseEntity<UsersWithRolesResponse> getAllUsers(
             @RequestHeader("X-User-Role") String userRole,
             @RequestHeader("X-User-Email") String userEmail
     ) {
-        authorizationUtil.checkRole(userRole,"ADMIN");
+        authorizationUtil.checkRole(userRole, "ADMIN");
+
         List<UserDetailsDto> users = adminService.getAllUsersExcludingCurrent(userEmail);
-        log.info("in getAllUsers the user list is : {}", users.toString());
-        List<String> roles = adminService.getAllRolesList();
+        List<Role> roles = adminService.getAllRolesList();
+
         return ResponseEntity.ok(new UsersWithRolesResponse(users, roles));
     }
 
-    @DeleteMapping("/users/{userId}")
-    public ResponseEntity<String> deleteUser(
+    // ---------------------------------------------------------------------
+    // Endpoint: Delete User
+    // ---------------------------------------------------------------------
+
+    /**
+     * Deletes a user by their unique identifier.
+     *
+     * <p>Only accessible to users with the ADMIN role.</p>
+     *
+     * @param userRole the role of the authenticated user (from request header)
+     * @param userId   the ID of the user to be deleted
+     * @return {@link ResponseEntity} with status 204 (No Content) if successful
+     */
+    @DeleteMapping("/user/{userId}/delete")
+    public ResponseEntity<Void> deleteUser(
             @RequestHeader("X-User-Role") String userRole,
             @PathVariable("userId") Long userId
     ) {
         authorizationUtil.checkRole(userRole, "ADMIN");
         adminService.deleteUser(userId);
-        return ResponseEntity.ok("User deleted successfully!");
+        return ResponseEntity.noContent().build();
     }
 
+    // ---------------------------------------------------------------------
+    // Endpoint: Register New User
+    // ---------------------------------------------------------------------
+
     /**
-     * Registers a new user.
+     * Registers a new user in the system.
      *
-     * @param request the registration details (validated)
-     * @return an authentication response containing a JWT token
+     * <p>Only accessible to users with the ADMIN role.</p>
+     *
+     * @param userRole the role of the authenticated user (from request header)
+     * @param request  the registration payload containing user details
+     * @return {@link ResponseEntity} containing the created user details
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestHeader("X-User-Role") String userRole,
-                                           @Valid @RequestBody RegisterRequest request
+    public ResponseEntity<UserDetailsDto> registerUser(
+            @RequestHeader("X-User-Role") String userRole,
+            @Valid @RequestBody RegisterRequest request
     ) {
-        authorizationUtil.checkRole(userRole,"ADMIN");
-        adminService.register(request);
-        return ResponseEntity.ok("User registered successfully");
+        authorizationUtil.checkRole(userRole, "ADMIN");
+        UserDetailsDto createdUser = adminService.register(request);
+        return ResponseEntity.ok(createdUser);
     }
 }

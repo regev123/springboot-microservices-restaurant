@@ -4,7 +4,7 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.regev</groupId>
+    <groupId>com.restaurant</groupId>
     <artifactId>springboot-microservices-restaurant</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
@@ -12,7 +12,7 @@
     <modules>
         <module>auth-service</module>
         <module>api-gateway-service</module>
-        <module>common-exception</module>
+        <module>common-service</module>
         <module>menu-service</module>
     </modules>
 
@@ -97,6 +97,23 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <version>2.43.0</version>
+                    <configuration>
+                        <java>
+                            <googleJavaFormat version="1.17.0" style="GOOGLE"/>
+                        </java>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>apply</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>

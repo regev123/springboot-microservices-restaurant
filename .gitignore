@@ -1,0 +1,259 @@
+# ===========================================
+# Spring Boot Microservices Restaurant
+# Comprehensive .gitignore Configuration
+# ===========================================
+
+# ==================== JAVA/MAVEN ====================
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+hs_err_pid*
+
+# ==================== NODE.JS/REACT ====================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+/build
+/dist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==================== IDE/EDITORS ====================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ==================== OPERATING SYSTEM ====================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==================== DOCKER ====================
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# ==================== KUBERNETES ====================
+# Kubernetes secrets and configs (if sensitive)
+# Uncomment if you have sensitive k8s configs
+# k8s/secrets/
+# k8s/configmaps/
+
+# ==================== DATABASE ====================
+# H2 Database files
+*.h2.db
+*.trace.db
+*.lock.db
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# ==================== TESTING ====================
+# Test results
+TEST-*.xml
+/target/surefire-reports/
+/target/failsafe-reports/
+
+# Coverage reports
+/coverage/
+*.lcov
+
+# ==================== CACHE ====================
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================== TEMPORARY FILES ====================
+# Temporary files
+*.tmp
+*.temp
+/temp/
+/tmp/
+
+# ==================== SECURITY ====================
+# Sensitive configuration files
+application-local.properties
+application-local.yml
+application-local.yaml
+application-secret.properties
+application-secret.yml
+application-secret.yaml
+
+# JWT secrets
+jwt-secret.properties
+jwt-secret.yml
+jwt-secret.yaml
+
+# Database credentials
+database.properties
+database.yml
+database.yaml
+
+# ==================== LOGS ====================
+# Application logs
+logs/
+*.log
+*.log.*
+
+# ==================== BACKUP FILES ====================
+# Backup files
+*.bak
+*.backup
+*.old
+
+# ==================== PACKAGE MANAGERS ====================
+# NPM
+package-lock.json
+# Uncomment if you want to ignore lock files
+# yarn.lock
+# pnpm-lock.yaml
+
+# ==================== MISC ====================
+# Spring Boot
+.spring-boot-devtools.properties
+
+# Application specific
+application-*.properties
+!application.properties
+!application-test.properties
+application-*.yml
+!application.yml
+application-*.yaml
+!application.yaml
+
+# Help files
+HELP.md
+
+# ==================== CUSTOM EXCLUSIONS ====================
+# Add any project-specific files to ignore here

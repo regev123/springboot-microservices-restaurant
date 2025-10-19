@@ -1,0 +1,47 @@
+.menu-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.menu-selector {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+}
+
+.menu-status {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.filter-bar {
+  max-width: 250px;
+  margin-bottom: 15px;
+}
+
+.ingredient-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ingredient-item {
+  font-size: 0.85rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.removable-tag {
+  color: #2c7a7b;
+  font-weight: 600;
+  margin-left: 4px;
+  font-size: 0.8rem;
+}
+
+.muted-text {
+  color: #999;
+  font-style: italic;
+}

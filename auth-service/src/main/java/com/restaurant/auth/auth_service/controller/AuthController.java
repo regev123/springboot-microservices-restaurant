@@ -9,12 +9,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for managing authentication and user-related operations.
+ * REST controller that handles authentication-related operations.
  *
  * <p>
- * Provides endpoints for user registration, login, password change,
- * and retrieving user details using a token.
+ * Provides endpoints for:
+ * <ul>
+ *     <li>User login</li>
+ *     <li>Password change</li>
+ *     <li>Retrieving user details</li>
+ * </ul>
  * </p>
+ *
+ * <p><b>Access Control:</b> Endpoints are publicly accessible unless otherwise secured via JWT.</p>
  */
 @RestController
 @RequestMapping("/auth")
@@ -23,36 +29,62 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    // ---------------------------------------------------------------------
+    // Endpoint: User Login
+    // ---------------------------------------------------------------------
+
     /**
-     * Authenticates a user and returns a JWT token.
+     * Authenticates a user using email and password credentials.
      *
-     * @param request the login credentials (validated)
-     * @return an authentication response containing a JWT token
+     * <p>On successful authentication, returns a JWT token and user details that can be used for subsequent requests and to display user information.</p>
+     *
+     * @param request the login request containing user credentials (validated)
+     * @return {@link ResponseEntity} containing an {@link AuthResponse} with a JWT token and user details
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        AuthResponse authResponse = authService.login(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(authResponse);
     }
 
+    // ---------------------------------------------------------------------
+    // Endpoint: Change Password
+    // ---------------------------------------------------------------------
+
     /**
-     * Changes the user's password and returns a new JWT token.
+     * Changes the user's password.
      *
-     * @param request contains the email, old password, and new password (validated)
-     * @return an authentication response containing a new JWT token
+     * <p>Requires a valid combination of email, old password, and new password.</p>
+     *
+     * @param request the request body containing email, old password, and new password (validated)
+     * @return {@link ResponseEntity} with HTTP 204 (No Content) upon successful password change
      */
     @PostMapping("/changePassword")
-    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        return ResponseEntity.ok(authService.changePassword(request));
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(
+                request.getEmail(),
+                request.getOldPassword(),
+                request.getNewPassword()
+        );
+        return ResponseEntity.noContent().build();
     }
 
+    // ---------------------------------------------------------------------
+    // Endpoint: Get User Details
+    // ---------------------------------------------------------------------
+
     /**
-     * Retrieves the currently authenticated user's details using the token email header.
+     * Retrieves details of the authenticated user.
      *
-     * @param userEmail the user's email extracted from the JWT token (provided in request header)
-     * @return the user's basic information
+     * <p>The user's email is extracted from the token and provided via the <code>X-User-Email</code> header.</p>
+     *
+     * @param userEmail the user's email address extracted from the JWT token
+     * @return {@link ResponseEntity} containing the user's profile information as a {@link UserResponse}
      */
     @GetMapping("/user")
     public ResponseEntity<UserResponse> getUser(@RequestHeader("X-User-Email") String userEmail) {
-        return ResponseEntity.ok(authService.getUserByEmail(userEmail));
+        UserResponse userResponse = authService.getUserByEmail(userEmail);
+        return ResponseEntity.ok(userResponse);
     }
 }

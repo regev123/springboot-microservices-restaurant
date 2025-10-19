@@ -77,7 +77,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs (enable for web apps if needed)
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // TODO: Replace with fine-grained access rules
+                        .anyRequest().permitAll() 
                 )
                 .build();
     }

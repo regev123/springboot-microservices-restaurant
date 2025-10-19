@@ -1,24 +1,405 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* === Global Professional Font System === */
+* {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
   margin: 0;
-  font-family: 'Inter', Arial, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #1e293b;
   background-color: #f9f9f9;
-  color: #333;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Typography Hierarchy === */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin: 0;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* === Text Elements === */
+p {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
 }
 
 a {
-  color: #007bff;
-  text-decoration: none;
+  font-size: 0.95rem;
   font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #2563eb;
 }
 
+/* === Form Elements === */
+label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: -0.01em;
+}
+
+button {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* === Input Elements === */
+input,
+textarea,
+select {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+/* === Small Text === */
+small,
+.text-sm {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+/* === Error Text === */
+.error-text,
+.text-error {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ef4444;
+}
+
+/* === Success Text === */
+.success-text,
+.text-success {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #10b981;
+}
+
+/* === Muted Text === */
+.text-muted {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+/* === Bold Text === */
+strong,
+b,
+.font-bold {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* === Light Text === */
+.font-light {
+  font-weight: 300;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+/* === Utility Classes === */
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-base {
+  font-size: 0.95rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+/* === Component Specific === */
 .home-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
+}
+
+/* === Table Styles === */
+table {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #374151;
+}
+
+th {
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+td {
+  font-weight: 400;
+  color: #64748b;
+}
+
+/* === Card Styles === */
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.card-text {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* === Navigation Styles === */
+.nav-link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: -0.01em;
+}
+
+.nav-link:hover {
+  color: #3b82f6;
+}
+
+.nav-link.active {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* === Button Styles === */
+.btn {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.btn-sm {
+  font-size: 0.875rem;
+}
+
+.btn-lg {
+  font-size: 1.125rem;
+}
+
+/* === Global Custom Scrollbar === */
+/* WebKit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 41, 59, 1);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(51, 65, 85, 1);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 41, 59, 1) rgba(0, 0, 0, 0.8);
+}
+
+/* === Responsive Typography === */
+@media (max-width: 768px) {
+  body {
+    font-size: 0.9rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+
+  .text-sm {
+    font-size: 0.8rem;
+  }
 }

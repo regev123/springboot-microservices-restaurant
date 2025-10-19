@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.regev</groupId>
+        <groupId>com.restaurant</groupId>
         <artifactId>springboot-microservices-restaurant</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -17,10 +17,10 @@
     <description>Domain: Menus, MenuItems, Categories, availability.</description>
 
     <dependencies>
-        <!-- ✅ Shared exception module -->
+        <!-- ✅ Common service module with all shared components -->
         <dependency>
-            <groupId>com.regev</groupId>
-            <artifactId>common-exception</artifactId>
+            <groupId>com.restaurant</groupId>
+            <artifactId>common-service</artifactId>
             <version>1.0.0</version>
         </dependency>
 
@@ -28,11 +28,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
