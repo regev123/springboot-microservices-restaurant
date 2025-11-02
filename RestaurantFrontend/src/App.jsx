@@ -7,7 +7,6 @@ import { clearAllToasts } from './store/slices/uiSlice';
 import AppRoutes from './routes/AppRoutes';
 import { GlobalToastManager } from './components/common/Toast';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ROUTES } from './constants';
 
 function App() {
   const dispatch = useDispatch();
@@ -16,7 +15,7 @@ function App() {
   const { token, shouldForceLogout } = useSelector((state) => state.auth);
 
   // Define public routes that don't require authentication
-  const publicRoutes = [ROUTES.LOGIN, ROUTES.CHANGE_PASSWORD];
+  const publicRoutes = ['/login', '/change-password'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   // Main authentication logic - runs on app initialization, token changes, and location changes
@@ -25,13 +24,13 @@ function App() {
 
     // Scenario 1: No token exists and user is not on a public route
     if (!tokenFromStorage && !isPublicRoute) {
-      navigate(ROUTES.LOGIN, { replace: true });
+      navigate('/login', { replace: true });
       return;
     }
 
     // Scenario 2: Token exists and user is on login page
-    if (tokenFromStorage && location.pathname === ROUTES.LOGIN) {
-      navigate(ROUTES.HOME, { replace: true });
+    if (tokenFromStorage && location.pathname === '/login') {
+      navigate('/home', { replace: true });
       return;
     }
 
@@ -44,7 +43,7 @@ function App() {
     // Scenario 4: No token in storage but token exists in state (shouldn't happen, but handle it)
     if (!tokenFromStorage && token) {
       // This means the store was reset, navigate to login
-      navigate(ROUTES.LOGIN, { replace: true });
+      navigate('/login', { replace: true });
       return;
     }
   }, [token, location.pathname, isPublicRoute, dispatch, navigate]); // Include location and other dependencies
@@ -53,7 +52,7 @@ function App() {
   useEffect(() => {
     if (shouldForceLogout) {
       dispatch(logout());
-      navigate(ROUTES.LOGIN, { replace: true });
+      navigate('/login', { replace: true });
     }
   }, [shouldForceLogout, dispatch, navigate]);
 

@@ -46,3 +46,15 @@ input[data-autofilled] {
   background-color: rgba(30, 41, 59, 0.6) !important;
   color: #ffffff !important;
 }
+
+/* Hide default number input spinners */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type='number'] {
+  -moz-appearance: textfield;
+}

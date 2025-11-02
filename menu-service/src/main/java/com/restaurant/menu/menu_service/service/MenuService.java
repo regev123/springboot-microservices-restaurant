@@ -3,19 +3,28 @@ package com.restaurant.menu.menu_service.service;
 import com.restaurant.common.exception.ResourceNotFoundException;
 import com.restaurant.menu.menu_service.dto.Menu.MenuDtoResponse;
 import com.restaurant.menu.menu_service.dto.Menu.StatusDtoResponse;
+import com.restaurant.menu.menu_service.dto.Menu.UpdateMenuMenuItemsRequest;
+import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.entity.Menu;
+import com.restaurant.menu.menu_service.entity.MenuItem;
 import com.restaurant.menu.menu_service.entity.MenuStatus;
 import com.restaurant.menu.menu_service.exceptions.MenuAlreadyExistException;
+import com.restaurant.menu.menu_service.mapper.MenuItemMapper;
 import com.restaurant.menu.menu_service.mapper.MenuMapper;
+import com.restaurant.menu.menu_service.repository.MenuItemRepository;
 import com.restaurant.menu.menu_service.repository.MenuRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +49,8 @@ public class MenuService {
     // ==================== DEPENDENCIES ====================
     private final MenuRepository menuRepository;
     private final MenuMapper menuMapper;
+    private final MenuItemRepository menuItemRepository;
+    private final MenuItemMapper menuItemMapper;
 
     // ---------------------------------------------------------------------
     // Command: Create Menu
@@ -163,6 +174,114 @@ public class MenuService {
             case ACTIVE -> ACTIVE_STATUS_DESC;
             case DRAFT -> DRAFT_STATUS_DESC;
         };
+    }
+
+    // ---------------------------------------------------------------------
+    // Command: Update Menu Menu Items Assignments
+    // ---------------------------------------------------------------------
+    /**
+     * Batch update menu items assigned to menus.
+     * Accepts a map of menuId -> Set of menuItemIds.
+     * For each menu: clears existing menu items, then assigns new ones.
+     */
+    public List<MenuDtoResponse> updateMenuMenuItems(UpdateMenuMenuItemsRequest request) {
+        // 1. Extract all menu IDs and menu item IDs from the request
+        Set<Long> menuIds = request.getAssignments().keySet();
+        Set<Long> allMenuItemIds = request.getAssignments().values().stream()
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+        
+        // 2. Load all menus (simple - just by ID)
+        List<Menu> menus = menuRepository.findAllById(menuIds);
+        if (menus.size() != menuIds.size()) {
+            throw new ResourceNotFoundException("One or more menus not found");
+        }
+        
+        // 3. Load all menu items that will be assigned
+        List<MenuItem> menuItems = menuItemRepository.findAllById(allMenuItemIds);
+        if (menuItems.size() != allMenuItemIds.size()) {
+            throw new ResourceNotFoundException("One or more menu items not found");
+        }
+        
+        // 4. Create a map for quick lookup by ID
+        Map<Long, MenuItem> menuItemMap = menuItems.stream()
+                .collect(Collectors.toMap(MenuItem::getId, item -> item));
+        
+        // 5. For each menu: delete all existing assignments, then assign new ones
+        for (Map.Entry<Long, Set<Long>> entry : request.getAssignments().entrySet()) {
+            Long menuId = entry.getKey();
+            Set<Long> menuItemIds = entry.getValue();
+            
+            // Find the menu
+            Menu menu = menus.stream()
+                    .filter(m -> m.getId().equals(menuId))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format(MENU_NOT_FOUND_MSG, menuId)));
+            
+            // Initialize menuItems if null
+            if (menu.getMenuItems() == null) {
+                menu.setMenuItems(new ArrayList<>());
+            }
+            
+            // Clear all existing menu items (this deletes from join table)
+            // Remove bidirectional relationships
+            menu.getMenuItems().forEach(menuItem -> {
+                if (menuItem.getMenus() != null) {
+                    menuItem.getMenus().remove(menu);
+                }
+            });
+            
+            // Assign new menu items (this inserts into join table)
+            List<MenuItem> newMenuItems = new ArrayList<>();
+            for (Long menuItemId : menuItemIds) {
+                MenuItem menuItem = menuItemMap.get(menuItemId);
+                if (menuItem != null) {
+                    newMenuItems.add(menuItem);
+                    // Update bidirectional relationship
+                    if (menuItem.getMenus() == null) {
+                        menuItem.setMenus(new ArrayList<>());
+                    }
+                    if (!menuItem.getMenus().contains(menu)) {
+                        menuItem.getMenus().add(menu);
+                    }
+                }
+            }
+            
+            // Set the new menu items
+            menu.setMenuItems(newMenuItems);
+            
+            // Save immediately to ensure changes are persisted
+            menuRepository.saveAndFlush(menu);
+        }
+        
+        // Reload all updated menus with their menu items for DTO mapping
+        List<Menu> savedMenus = menuRepository.findAllWithMenuItems().stream()
+                .filter(menu -> request.getAssignments().keySet().contains(menu.getId()))
+                .collect(Collectors.toList());
+        
+        // Return updated menu DTOs with menu items
+        return savedMenus.stream()
+                .map(menuMapper::toDtoWithMenuItems)
+                .collect(Collectors.toList());
+    }
+
+    // ---------------------------------------------------------------------
+    // Query: Get Menu Items by Menu ID
+    // ---------------------------------------------------------------------
+    /**
+     * Get menu items assigned to a specific menu as DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<MenuItemDto> getMenuItemsByMenuId(Long menuId) {
+        // Verify menu exists
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MENU_NOT_FOUND_MSG, menuId)));
+        if (menu.getMenuItems() == null) {
+            return new ArrayList<>();
+        }
+        return menu.getMenuItems().stream()
+                .map(menuItemMapper::toDto)
+                .collect(Collectors.toList());
     }
 
 }

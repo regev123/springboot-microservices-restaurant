@@ -6,25 +6,28 @@ import ProtectedRoute from './ProtectedRoute';
 import HomePage from '../pages/HomePage';
 import UsersManagementPage from '../pages/Admin/UsersManagementPage';
 import MenuManagementPage from '../pages/Admin/MenuManagementPage';
-import { ROUTES } from '../constants';
+import NotFoundPage from '../pages/NotFoundPage';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public route */}
-      <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage />} />
-      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path="/change-password" element={<ChangePasswordPage />} />
+      <Route path="/login" element={<LoginPage />} />
 
       {/* Authenticated routes */}
       <Route element={<ProtectedRoute />}>
-        <Route path={ROUTES.HOME} element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
       </Route>
 
       {/* Admin-only routes */}
       <Route element={<ProtectedRoute roles={['ADMIN']} />}>
-        <Route path={ROUTES.ADMIN_USERS} element={<UsersManagementPage />} />
-        <Route path={ROUTES.ADMIN_MENU} element={<MenuManagementPage />} />
+        <Route path="/admin/users" element={<UsersManagementPage />} />
+        <Route path="/admin/menu" element={<MenuManagementPage />} />
       </Route>
+
+      {/* 404 - Catch all unmatched routes */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

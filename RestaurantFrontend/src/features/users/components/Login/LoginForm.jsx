@@ -2,19 +2,11 @@ import React from 'react';
 import Input from '../../../../components/common/Input/Input';
 import Button from '../../../../components/common/Button/Button';
 import NavigateLink from '../../../../components/common/NavigateLink/NavigateLink';
-import FormSpinner from '../../../../components/common/Spinner/Spinner';
 import useLoginUserForm from '../../hooks/useLoginUserForm';
+import FormSpinner from '../../../../components/common/Spinner/Spinner';
 
 const LoginForm = () => {
-  const {
-    formData,
-    handleInputChange,
-    isSubmitting,
-    onSubmit,
-    navigationLinks,
-    hasError,
-    getError,
-  } = useLoginUserForm();
+  const { formData, errors, isSubmitting, handleInputChange, handleLogin } = useLoginUserForm();
 
   return (
     <div className="space-y-6">
@@ -26,27 +18,29 @@ const LoginForm = () => {
         type="email"
         value={formData.email}
         onChange={(e) => handleInputChange('email', e.target.value)}
+        error={errors.email}
         required={true}
-        error={hasError('email') ? getError('email') : ''}
       />
       <Input
         label="Password"
         type="password"
         value={formData.password}
         onChange={(e) => handleInputChange('password', e.target.value)}
+        error={errors.password}
         required={true}
-        error={hasError('password') ? getError('password') : ''}
       />
       <Button
         text="Sign In"
         type="button"
-        onClick={onSubmit}
+        onClick={handleLogin}
         fullWidth={true}
         size="xlarge"
         disabled={isSubmitting}
       />
-      <FormSpinner show={isSubmitting} text="Signing in..." />
-      <NavigateLink links={navigationLinks} />
+
+      <FormSpinner show={isSubmitting} text="Logging in..." />
+
+      <NavigateLink links={[{ to: '/change-password', text: 'Change Password' }]} />
     </div>
   );
 };

@@ -1,126 +1,229 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import useValidationForm from '../../validation/hooks/useValidationForm';
-import useFormSubmission from '../../../hooks/useFormSubmission';
-import useScrollToView from '../../../hooks/useScrollToView';
+import { scrollToTop } from '../../../utils/scrollUtils';
 import { registerUser, updateUser, deleteUser } from '../../../store/thunks/adminThunks';
-import {
-  NEW_USER_VALIDATION_RULES,
-  NEW_USER_INITIAL_DATA,
-  EDIT_USER_VALIDATION_RULES,
-  EDIT_USER_INITIAL_DATA,
-} from '../../validation/configs/user/userManagementValidationConfig';
 
-/**
- * Comprehensive hook for managing user management page
- * Combines state management, validation, and actions in a single file
- * Follows SOLID principles and clean code concepts
- */
+// Constants
+const INITIAL_SHARED_FIELDS = {
+  firstName: '',
+  lastName: '',
+  phoneNumber: '',
+  role: '',
+};
+
+const INITIAL_ADD_FORM_DATA = {
+  ...INITIAL_SHARED_FIELDS,
+  email: '',
+  password: '',
+};
+
+const INITIAL_UPDATE_FORM_DATA = {
+  ...INITIAL_SHARED_FIELDS,
+};
+
+const INITIAL_SHARED_ERRORS = {
+  firstName: '',
+  lastName: '',
+  phoneNumber: '',
+  role: '',
+};
+
+const INITIAL_ADD_FORM_ERRORS = {
+  ...INITIAL_SHARED_ERRORS,
+  email: '',
+  password: '',
+};
+
+const INITIAL_UPDATE_FORM_ERRORS = {
+  ...INITIAL_SHARED_ERRORS,
+};
+
+// Shared validation rules for common fields
+const SHARED_VALIDATION_RULES = {
+  firstName: {
+    required: true,
+    pattern: /^[A-Za-z]{3,30}$/,
+    message: 'First name must be only letters with 3-30 characters',
+  },
+  lastName: {
+    required: true,
+    pattern: /^[A-Za-z]{3,30}$/,
+    message: 'Last name must be only letters with 3-30 characters',
+  },
+  phoneNumber: {
+    required: true,
+    pattern: /^05\d{8}$/,
+    message: 'Phone number must start with 05 and be exactly 10 digits',
+  },
+  role: {
+    required: true,
+    message: 'Role is required',
+  },
+};
+
+// Validation rules for adding new user (RegisterRequest)
+const ADD_VALIDATION_RULES = {
+  ...SHARED_VALIDATION_RULES,
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: 'Email should be valid',
+  },
+  password: {
+    required: true,
+    pattern: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/,
+    message:
+      'Password must be at least 8 characters long and include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
+  },
+};
+
+// Validation rules for updating user (UpdateUserRequest)
+const UPDATE_VALIDATION_RULES = {
+  ...SHARED_VALIDATION_RULES,
+};
+
 const useUserManagementForm = () => {
-  // Redux state
   const { users, roles } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
 
-  // Page-level state management
-  const [addMode, setAddMode] = useState(true); // Start with add mode
+  const [addMode, setAddMode] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
-  const editFormRef = useRef(null);
 
-  // Scroll to view hook
-  const scrollToView = useScrollToView();
+  const [addFormData, setAddFormData] = useState(INITIAL_ADD_FORM_DATA);
+  const [addFormErrors, setAddFormErrors] = useState(INITIAL_ADD_FORM_ERRORS);
+  const [updateFormData, setUpdateFormData] = useState(INITIAL_UPDATE_FORM_DATA);
+  const [updateFormErrors, setUpdateFormErrors] = useState(INITIAL_UPDATE_FORM_ERRORS);
 
-  // Create separate validation instances for each mode
-  const newUserValidation = useValidationForm(NEW_USER_VALIDATION_RULES, NEW_USER_INITIAL_DATA);
-  const editUserValidation = useValidationForm(EDIT_USER_VALIDATION_RULES, EDIT_USER_INITIAL_DATA);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get current validation based on mode
-  const currentValidation = addMode ? newUserValidation : editUserValidation;
+  // Validation functions
+  const validateField = (name, value) => {
+    const rule = addMode ? ADD_VALIDATION_RULES[name] : UPDATE_VALIDATION_RULES[name];
+    if (!rule) return '';
 
-  // Populate form when editing
-  useEffect(() => {
-    if (!addMode && editingUser) {
-      editUserValidation.handleInputChange('firstName', editingUser.firstName);
-      editUserValidation.handleInputChange('lastName', editingUser.lastName);
-      editUserValidation.handleInputChange('phoneNumber', editingUser.phoneNumber);
-      editUserValidation.handleInputChange('role', editingUser.role);
+    // Required validation
+    if (rule.required && !value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
     }
-  }, [addMode, editingUser]); // Removed currentValidation to prevent infinite loop
 
-  // Scroll to edit form when entering edit mode
-  useEffect(() => {
-    if (!addMode && editingUser && editFormRef.current) {
-      scrollToView(editFormRef);
+    // Pattern validation
+    if (rule.pattern && value && !rule.pattern.test(value)) {
+      return rule.message;
     }
-  }, [addMode, editingUser]); // Removed scrollToView from dependencies to prevent infinite loop
 
-  // Check if there are changes in edit mode
-  const hasChanges = useMemo(() => {
-    if (!editingUser || addMode) return false;
-
-    return (
-      currentValidation.formData.firstName !== editingUser.firstName ||
-      currentValidation.formData.lastName !== editingUser.lastName ||
-      currentValidation.formData.phoneNumber !== editingUser.phoneNumber ||
-      currentValidation.formData.role !== editingUser.role
-    );
-  }, [currentValidation.formData, editingUser, addMode]);
-
-  // Form submission handler
-  const { onSubmit, isSubmitting } = useFormSubmission({
-    action: () => {
-      if (!addMode) {
-        // Include user ID when updating existing user
-        const userDataWithId = {
-          ...currentValidation.formData,
-          id: editingUser.id,
-        };
-        return dispatch(updateUser(userDataWithId)).unwrap();
-      } else {
-        return dispatch(registerUser(currentValidation.formData)).unwrap();
-      }
-    },
-    validateForm: currentValidation.validateForm,
-  });
-
-  // Switch back to add mode (from edit mode)
-  const handleBackToAddMode = () => {
-    setAddMode(true);
-    setEditingUser(null);
+    return '';
   };
 
-  // User actions
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setAddMode(false);
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(addMode ? ADD_VALIDATION_RULES : UPDATE_VALIDATION_RULES).forEach((field) => {
+      const error = validateField(field, addMode ? addFormData[field] : updateFormData[field]);
+      newErrors[field] = error;
+      if (error) isValid = false;
+    });
+
+    addMode ? setAddFormErrors(newErrors) : setUpdateFormErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (name, value) => {
+    addMode
+      ? setAddFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }))
+      : setUpdateFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+
+    // Clear error when user starts typing
+    if (addMode ? addFormErrors[name] : updateFormErrors[name]) {
+      addMode
+        ? setAddFormErrors((prev) => ({
+            ...prev,
+            [name]: '',
+          }))
+        : setUpdateFormErrors((prev) => ({
+            ...prev,
+            [name]: '',
+          }));
+    }
+  };
+
+  const resetForm = () => {
+    setAddFormData(INITIAL_ADD_FORM_DATA);
+    setAddFormErrors(INITIAL_ADD_FORM_ERRORS);
+    setUpdateFormData(INITIAL_UPDATE_FORM_DATA);
+    setUpdateFormErrors(INITIAL_UPDATE_FORM_ERRORS);
+  };
+
+  const handleAddOrEditUser = async () => {
+    setIsSubmitting(true);
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await dispatch(
+        addMode ? registerUser(addFormData) : updateUser({ ...updateFormData, id: editingUser.id })
+      ).unwrap();
+      resetForm();
+      addMode ? resetForm() : handleSwitchToAddMode();
+    } catch (error) {
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteUser = (userId) => {
     dispatch(deleteUser(userId));
+    if (userId === editingUser?.id) {
+      handleSwitchToAddMode();
+    }
+  };
+
+  // Mode switching functions (now using internal state)
+  const handleSwitchToAddMode = () => {
+    resetForm();
+    setAddMode(true);
+    setEditingUser(null);
+  };
+
+  const handleSwitchToEditMode = (user) => {
+    resetForm();
+    setEditingUser(user);
+    setAddMode(false);
+    setUpdateFormData(user);
+
+    scrollToTop();
   };
 
   return {
     // Data
     users,
     roles,
-    formData: currentValidation.formData,
+    formData: addMode ? addFormData : updateFormData,
 
     // State
     addMode,
     editingUser,
-    editFormRef,
 
     // Handlers
-    handleInputChange: currentValidation.handleInputChange,
-    onSubmit,
-    handleEditUser,
+    handleInputChange,
+    handleAddOrEditUser,
+    handleSwitchToEditMode,
     handleDeleteUser,
-    handleBackToAddMode,
+    handleSwitchToAddMode,
 
     // Validation
-    hasError: currentValidation.hasError,
-    getError: currentValidation.getError,
+    addFormErrors,
+    updateFormErrors,
     isSubmitting,
-    hasChanges,
 
     // Actions
     setEditingUser,

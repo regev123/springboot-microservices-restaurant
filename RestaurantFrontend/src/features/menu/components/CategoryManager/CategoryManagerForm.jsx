@@ -6,50 +6,53 @@ import useCategoryManagerForm from '../../hooks/useCategoryManagerForm';
 const CategoryManagerForm = () => {
   const {
     formData,
-    validationErrors,
     categories,
     addMode,
     editingCategory,
     hasOrderChanges,
-    handleEditCategory,
+    handleSwitchToEditMode,
+    handleSwitchToAddMode,
     handleDeleteCategory,
     handleMoveUp,
     handleMoveDown,
     saveOrderChanges,
     cancelOrderChanges,
     handleInputChange,
-    switchToEditMode,
-    switchToAddMode,
-    handleSubmit,
+    handleAddOrEditCategory,
+    formErrors,
+    isSubmitting,
   } = useCategoryManagerForm();
 
   return (
-    <>
-      {/* Create/Edit Category Form Section */}
-      <CategoryForm
-        formData={formData}
-        validationErrors={validationErrors}
-        addMode={addMode}
-        editingCategory={editingCategory}
-        handleInputChange={handleInputChange}
-        handleEditCategory={handleEditCategory}
-        switchToEditMode={switchToEditMode}
-        switchToAddMode={switchToAddMode}
-        handleSubmit={handleSubmit}
-      />
+    <div className="grid grid-cols-5 gap-6">
+      {/* Left Side - Create/Edit Category Form Section (20%) */}
+      <div className="col-span-1">
+        <CategoryForm
+          formData={formData}
+          addMode={addMode}
+          editingCategory={editingCategory}
+          handleInputChange={handleInputChange}
+          handleSwitchToAddMode={handleSwitchToAddMode}
+          handleAddOrEditCategory={handleAddOrEditCategory}
+          formErrors={formErrors}
+          isSubmitting={isSubmitting}
+        />
+      </div>
 
-      {/* Existing Categories Table */}
-      <CategoriesTableForm
-        categories={categories}
-        hasOrderChanges={hasOrderChanges}
-        handleEditCategory={handleEditCategory}
-        handleMoveUp={handleMoveUp}
-        handleMoveDown={handleMoveDown}
-        handleDeleteCategory={handleDeleteCategory}
-        saveOrderChanges={saveOrderChanges}
-        cancelOrderChanges={cancelOrderChanges}
-      />
-    </>
+      {/* Right Side - Existing Categories Table (80%) */}
+      <div className="col-span-4">
+        <CategoriesTableForm
+          categories={categories}
+          hasOrderChanges={hasOrderChanges}
+          handleSwitchToEditMode={handleSwitchToEditMode}
+          handleMoveUp={handleMoveUp}
+          handleMoveDown={handleMoveDown}
+          handleDeleteCategory={handleDeleteCategory}
+          saveOrderChanges={saveOrderChanges}
+          cancelOrderChanges={cancelOrderChanges}
+        />
+      </div>
+    </div>
   );
 };
 

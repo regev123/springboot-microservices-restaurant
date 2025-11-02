@@ -2,16 +2,24 @@ package com.restaurant.menu.menu_service.entity;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 
 @Entity
 @Table(name = "menu_items")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 /**
  * JPA entity representing an item within a menu.
  */
@@ -21,12 +29,14 @@ public class MenuItem {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "menu_id")
-    private Menu menu;
-
-    @ManyToOne(optional = false)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @ManyToMany(mappedBy = "menuItems")
+    private List<Menu> menus;
+
+    @ManyToMany(mappedBy = "menuItems")
+    private List<KitchenStation> kitchenStations;
 
     @Column(nullable = false)
     private String name;
@@ -36,16 +46,37 @@ public class MenuItem {
     @Column(nullable = false)
     private BigDecimal price;
 
-    private boolean isAvailable = true;
+    private Boolean isAvailable;
 
-    @OneToMany(
-            mappedBy = "menuItem",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
+    @ElementCollection
+    @CollectionTable(
+            name = "menu_item_ingredients",
+            joinColumns = @JoinColumn(name = "menu_item_id")
     )
-    private List<Ingredient> ingredients = new ArrayList<>();
+    @AttributeOverrides({
+            @AttributeOverride(name = "name", column = @Column(name = "ingredient_name")),
+            @AttributeOverride(name = "removable", column = @Column(name = "is_removable"))
+    })
+    private Set<Ingredient> ingredients;
 
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
+
+    // JPA Lifecycle callbacks for automatic timestamp management
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+        ingredients = new HashSet<>();
+        menus = new ArrayList<>();
+        kitchenStations = new ArrayList<>();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
 

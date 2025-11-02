@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/menu/items")
+@RequestMapping("/menu/items")
 @RequiredArgsConstructor
 /**
  * REST controller exposing endpoints for creating, updating, deleting, and querying menu items.
@@ -32,7 +32,7 @@ public class MenuItemController {
     /**
      * Create a new menu item. Admin only.
      */
-    @PostMapping
+    @PostMapping("/admin/create")
     @RequiresRole("ADMIN")
     public ResponseEntity<MenuItemDto> createMenuItem(@Valid @RequestBody CreateMenuItemDtoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(menuItemService.createMenuItem(request));
@@ -44,13 +44,12 @@ public class MenuItemController {
     /**
      * Update an existing menu item by ID. Admin only.
      */
-    @PutMapping("/{itemId}")
+    @PutMapping("/admin/update")
     @RequiresRole("ADMIN")
     public ResponseEntity<MenuItemDto> updateMenuItem(
-            @PathVariable Long itemId,
             @Valid @RequestBody UpdateMenuItemRequest request
     ) {
-        return ResponseEntity.ok(menuItemService.updateMenuItem(itemId, request));
+        return ResponseEntity.ok(menuItemService.updateMenuItem(request));
     }
 
     // ---------------------------------------------------------------------
@@ -59,9 +58,9 @@ public class MenuItemController {
     /**
      * Delete a menu item by ID. Admin only.
      */
-    @DeleteMapping("/{itemId}")
+    @DeleteMapping("/admin/delete/{itemId}")
     @RequiresRole("ADMIN")
-    public ResponseEntity<Void> deleteMenuItem(@PathVariable Long itemId) {
+    public ResponseEntity<Void> deleteMenuItem(@PathVariable("itemId") Long itemId) {
         menuItemService.deleteMenuItem(itemId);
         return ResponseEntity.noContent().build();
     }
@@ -72,12 +71,9 @@ public class MenuItemController {
     /**
      * List menu items with optional filters for category and availability.
      */
-    @GetMapping
-    public ResponseEntity<List<MenuItemDto>> getAllMenuItems(
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) Boolean available
-    ) {
-        return ResponseEntity.ok(menuItemService.getMenuItems(categoryId, available));
+    @GetMapping("/all")
+    public ResponseEntity<List<MenuItemDto>> getAllMenuItems() {
+        return ResponseEntity.ok(menuItemService.getMenuItems());
     }
 
     // ---------------------------------------------------------------------
@@ -87,7 +83,7 @@ public class MenuItemController {
      * Get a single menu item by ID.
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<MenuItemDto> getMenuItemById(@PathVariable Long itemId) {
+    public ResponseEntity<MenuItemDto> getMenuItemById(@PathVariable("itemId") Long itemId) {
         return ResponseEntity.ok(menuItemService.getMenuItemById(itemId));
     }
 }

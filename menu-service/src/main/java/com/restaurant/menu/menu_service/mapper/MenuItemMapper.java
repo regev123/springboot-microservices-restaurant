@@ -1,6 +1,7 @@
 package com.restaurant.menu.menu_service.mapper;
 
 import com.restaurant.common.mapper.EntityMapper;
+import com.restaurant.menu.menu_service.dto.Category.CategorySummaryDto;
 import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.entity.MenuItem;
 import org.springframework.stereotype.Component;
@@ -23,10 +24,11 @@ public class MenuItemMapper implements EntityMapper<MenuItem, MenuItemDto> {
                 item.getName(),
                 item.getDescription(),
                 item.getPrice(),
-                item.isAvailable(),
-                item.getCategory() != null ? item.getCategory().getId() : null,
-                item.getCategory() != null ? item.getCategory().getName() : null,
-                item.getUpdatedAt()
+                item.getIsAvailable(),
+                item.getCategory() != null ? new CategorySummaryDto(item.getCategory().getId(), item.getCategory().getName()) : null,
+                item.getCreatedAt(),
+                item.getUpdatedAt(),
+                item.getIngredients()
         );
     }
 
@@ -41,8 +43,10 @@ public class MenuItemMapper implements EntityMapper<MenuItem, MenuItemDto> {
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setPrice(dto.getPrice());
-        item.setAvailable(dto.isAvailable());
+        item.setIsAvailable(Boolean.valueOf(dto.getIsAvailable()));
+        item.setCreatedAt(dto.getCreatedAt());
         item.setUpdatedAt(dto.getUpdatedAt());
+        item.setIngredients(dto.getIngredients());
         
         return item;
     }

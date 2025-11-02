@@ -3,14 +3,12 @@ package com.restaurant.apiGateway.api_gateway_service.service;
 import com.restaurant.apiGateway.api_gateway_service.dto.TokenValidationRequest;
 import com.restaurant.apiGateway.api_gateway_service.exception.TokenOutdatedException;
 import com.restaurant.apiGateway.api_gateway_service.util.JwtProperties;
-import com.restaurant.common.exception.UserNotFoundException;
 import com.restaurant.common.service.HttpUtilityService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -113,9 +111,12 @@ public class JwtService {
      * Sends a request to the Authentication Service to validate the token timestamp.
      * <p>
      * This method sends a request to the Authentication Service to validate the token timestamp.
+     * If the token is invalid (HTTP 403), it throws a TokenOutdatedException.
      * </p>
      *
      * @param claims the claims from the JWT token
+     * @throws TokenOutdatedException if the token is outdated due to password change
+     * @throws RuntimeException if the HTTP request fails
      */
     private void sendTokenValidationRequest(Claims claims) {
         final String url = String.format(TOKEN_VALIDATION_URL_TEMPLATE, authServiceBaseUrl);
@@ -125,6 +126,18 @@ public class JwtService {
             claims.getIssuedAt().toInstant() // issuedAt from JWT
         );
         
-        httpUtilityService.postJsonRequest(url, requestBody, Void.class);
+        try {
+            ResponseEntity<String> response = httpUtilityService.postJsonRequest(url, requestBody, String.class);
+            
+            // Check if the response indicates an invalid token (HTTP 403)
+            if (response.getStatusCode().is4xxClientError()) {
+                String errorMessage = response.getBody() != null ? response.getBody() : "Token validation failed";
+                throw new TokenOutdatedException(errorMessage);
+            }
+            
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Token validation failed: " + e.getMessage(), e);
+        }
     }   
 }

@@ -98,7 +98,7 @@ const Table = ({ columns, data, actions, pageSize = 10 }) => {
         <div className="flex justify-between items-center">
           <div className="text-slate-400 text-sm">
             Showing {startIndex + 1} to {Math.min(startIndex + currentPageSize, data.length)} of{' '}
-            {data.length} users
+            {data.length} {data.length === 1 ? 'item' : 'items'}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm">Show:</span>

@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +36,9 @@ public class CategoryService {
     // Error Messages
     private static final String CATEGORY_ALREADY_EXISTS_MSG = "Cannot create category: '%s' already exists. Category names must be unique.";
     private static final String CATEGORY_NOT_FOUND_DELETE_MSG = "Cannot delete category: category with ID %d not found.";
-    private static final String CATEGORIES_NOT_FOUND_MSG = "Cannot update category order: %d categories not found with IDs: %s";
-    
+    private static final String DUPLICATE_CATEGORY_IDS_MSG = "Duplicate category IDs are not allowed in order updates";
+    private static final String CATEGORIES_NO_LONGER_EXIST_MSG = "Some categories no longer exist. Please refresh the page and try again.";
+
     // ==================== DEPENDENCIES ====================
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -67,6 +69,33 @@ public class CategoryService {
         Category savedCategory = categoryRepository.save(category);
         
         return categoryMapper.toDto(savedCategory);
+    }
+    
+    /**
+     * Update an existing category with new name and description.
+     * Validates that the category exists and that the new name is unique (if changed).
+     * 
+     * @param categoryId the ID of the category to update
+     * @param categoryName the new name for the category
+     * @param description the new description for the category
+     * @return the updated category as DTO
+     * @throws ResourceNotFoundException if category doesn't exist
+     * @throws CategoryAlreadyExistException if new name conflicts with existing category
+     */
+    public CategoryDtoResponse updateCategory(Long categoryId, String categoryName, String description) {
+        Category existingCategory = findCategoryById(categoryId);
+        
+        // Check if name is being changed and validate uniqueness
+        if (!existingCategory.getName().equalsIgnoreCase(categoryName)) {
+            validateCategoryNameUniqueness(categoryName);
+            existingCategory.setName(categoryName);
+        }
+        
+        existingCategory.setDescription(description);
+        
+        Category updatedCategory = categoryRepository.save(existingCategory);
+        
+        return categoryMapper.toDto(updatedCategory);
     }
     
     /**
@@ -108,12 +137,15 @@ public class CategoryService {
      * @param categoryId the ID of the category to delete
      * @throws ResourceNotFoundException if category doesn't exist
      */
-    public void deleteCategory(Long categoryId) {
+    public List<CategoryDtoResponse> deleteCategory(Long categoryId) {
         Category categoryToDelete = findCategoryById(categoryId);
         Integer deletedOrder = categoryToDelete.getSortOrder();
         
         categoryRepository.deleteById(categoryId);
         reorderCategoriesAfterDeletion(deletedOrder);
+        
+        // Return all categories after deletion and reordering
+        return getAllCategories();
     }
     
     /**
@@ -159,11 +191,16 @@ public class CategoryService {
         // Extract category IDs once for better performance
         List<Long> categoryIds = extractCategoryIds(orderChanges);
         
-        validateCategoryIdsExist(orderChanges, categoryIds);
+        // Validate input for duplicates
+        validateNoDuplicateIds(categoryIds);
+        
+        // Validate and get existing categories in one database call
+        List<Category> existingCategories = validateCategoryIdsExist(orderChanges, categoryIds);
         
         validateOrderValues(orderChanges);
         
-        List<Category> updatedCategories = updateCategorySortOrders(orderChanges, categoryIds);
+        // Use the already fetched categories instead of calling database again
+        List<Category> updatedCategories = updateCategorySortOrders(orderChanges, existingCategories);
         
         categoryRepository.saveAll(updatedCategories);
         
@@ -184,6 +221,19 @@ public class CategoryService {
         return orderChanges.stream()
                 .map(UpdateOrderDtoRequest::getId)
                 .toList();
+    }
+    
+    /**
+     * Validate that there are no duplicate category IDs in the request.
+     * 
+     * @param categoryIds list of category IDs to validate
+     * @throws IllegalArgumentException if duplicate IDs are found
+     */
+    private void validateNoDuplicateIds(List<Long> categoryIds) {
+        Set<Long> uniqueIds = new HashSet<>(categoryIds);
+        if (uniqueIds.size() != categoryIds.size()) {
+            throw new IllegalArgumentException(DUPLICATE_CATEGORY_IDS_MSG);
+        }
     }
         
     /**
@@ -234,42 +284,30 @@ public class CategoryService {
      * Uses efficient batch lookup to minimize database calls.
      *
      * @param orderChanges list of order changes to validate
+     * @return list of existing categories for reuse
      * @throws ResourceNotFoundException if any category ID doesn't exist
      */
-    private void validateCategoryIdsExist(List<UpdateOrderDtoRequest> orderChanges, List<Long> categoryIds) {
-        Set<Long> existingIds = getExistingCategoryIds(categoryIds);
-        List<Long> missingIds = findMissingIds(categoryIds, existingIds);
+    private List<Category> validateCategoryIdsExist(List<UpdateOrderDtoRequest> orderChanges, List<Long> categoryIds) {
+        List<Category> existingCategories = getExistingCategories(categoryIds);
         
-        if (!missingIds.isEmpty()) {
+        // Simple check: if sizes don't match, some categories were deleted concurrently
+        if (existingCategories.size() != categoryIds.size()) {
             throw new ResourceNotFoundException(
-                String.format(CATEGORIES_NOT_FOUND_MSG, missingIds.size(), missingIds)
+                CATEGORIES_NO_LONGER_EXIST_MSG
             );
         }
+        
+        return existingCategories; // Return categories for reuse
     }
     
     /**
-     * Get existing category IDs from database in a single batch query.
+     * Get existing categories from database in a single batch query.
      * 
      * @param requestedIds list of IDs to check
-     * @return set of existing category IDs
+     * @return list of existing categories
      */
-    private Set<Long> getExistingCategoryIds(List<Long> requestedIds) {
-        return categoryRepository.findAllById(requestedIds).stream()
-                .map(Category::getId)
-                .collect(Collectors.toSet());
-    }
-    
-    /**
-     * Find IDs that don't exist in the database.
-     * 
-     * @param requestedIds list of requested IDs
-     * @param existingIds set of existing IDs
-     * @return list of missing IDs
-     */
-    private List<Long> findMissingIds(List<Long> requestedIds, Set<Long> existingIds) {
-        return requestedIds.stream()
-                .filter(id -> !existingIds.contains(id))
-                .toList();
+    private List<Category> getExistingCategories(List<Long> requestedIds) {
+        return categoryRepository.findAllById(requestedIds);
     }
     
 
@@ -304,17 +342,16 @@ public class CategoryService {
      * @param orderChanges list of order changes to apply
      * @return list of updated category entities ready for persistence
      */
-    private List<Category> updateCategorySortOrders(List<UpdateOrderDtoRequest> orderChanges, List<Long> categoryIds) {
-        List<Category> categories = categoryRepository.findAllById(categoryIds);
+    private List<Category> updateCategorySortOrders(List<UpdateOrderDtoRequest> orderChanges, List<Category> existingCategories) {
         Map<Long, Integer> orderLookupMap = createOrderLookupMap(orderChanges);
         
         // Update sortOrder for each category using efficient map lookup
-        categories.forEach(category -> {
+        existingCategories.forEach(category -> {
             Integer newOrder = orderLookupMap.get(category.getId());
             category.setSortOrder(newOrder);
         });
         
-        return categories;
+        return existingCategories;
     }
 
 }

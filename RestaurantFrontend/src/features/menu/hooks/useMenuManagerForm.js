@@ -1,237 +1,171 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createMenu, deleteMenu, activateMenu, updateMenu } from '../../../store/thunks/menuThunks';
-import useFormValidation from '../../validation/hooks/useFormValidation';
-import useFormSubmission from '../../../hooks/useFormSubmission';
-import {
-  MENU_VALIDATION_RULES,
-  MENU_INITIAL_DATA,
-} from '../../validation/configs/menu/menuValidationConfig';
+import { scrollToTop } from '../../../utils/scrollUtils';
+
+// Constants
+const INITIAL_FORM_DATA = {
+  name: '',
+};
+
+const INITIAL_FORM_ERRORS = {
+  name: '',
+};
+
+const VALIDATION_RULES = {
+  name: {
+    required: true,
+    pattern: /^[A-Za-z0-9\s\-'&.,]{2,50}$/,
+    message:
+      'Menu name must be 2-50 characters and contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, periods, and commas',
+  },
+};
 
 /**
- * Custom hook for managing menu form operations following SOLID principles
- *
- * Features:
- * - Form state management (add/edit modes)
- * - Menu CRUD operations (create, read, update, delete, activate)
- * - Form validation and submission
- * - Automatic form reset after operations
- * - Clean separation of concerns
- *
- * @returns {Object} Form state and handlers for menu management
- * @returns {Array} menus - List of all menus
- * @returns {Object} formData - Current form data
- * @returns {boolean} isSubmitting - Form submission state
- * @returns {boolean} addMode - Whether form is in add mode
- * @returns {Object|null} editingMenu - Currently edited menu
- * @returns {boolean} hasChanges - Whether form has unsaved changes
- * @returns {Function} onSubmit - Form submission handler
- * @returns {Function} handleActivateMenu - Menu activation handler
- * @returns {Function} handleDelete - Menu deletion handler
- * @returns {Function} switchToEditMode - Switch to edit mode handler
- * @returns {Function} switchToAddMode - Switch to add mode handler
+ * Comprehensive hook for managing menu management page
+ * Combines state management, validation, and actions in a single file
+ * Follows SOLID principles and clean code concepts
  */
 const useMenuManagerForm = () => {
-  // ==================== STATE MANAGEMENT ====================
-  const [formState, setFormState] = useState({
-    addMode: true,
-    editingMenu: null,
-    originalMenuName: '',
-  });
-
-  // ==================== DEPENDENCIES ====================
-  const validation = useFormValidation(MENU_VALIDATION_RULES, MENU_INITIAL_DATA);
+  const { menus } = useSelector((state) => state.menu);
   const dispatch = useDispatch();
 
-  // ==================== SELECTORS ====================
-  const { menus } = useSelector((state) => state.menu);
-  const { isCreating, isDeleting, isUpdating } = useSelector((state) => state.menu.menuUI);
+  const [addMode, setAddMode] = useState(true);
+  const [editingMenu, setEditingMenu] = useState(null);
 
-  // ==================== HELPER FUNCTIONS ====================
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [formErrors, setFormErrors] = useState(INITIAL_FORM_ERRORS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * Creates menu data object from form data
-   * @returns {Object} Menu data for API
-   */
-  const createMenuData = () => ({
-    name: validation.formData.menuName,
-  });
+  // Validation functions
+  const validateField = (name, value) => {
+    const rule = VALIDATION_RULES[name];
+    if (!rule) return '';
 
-  /**
-   * Determines the appropriate action based on current mode
-   * @returns {Promise} Redux action promise
-   */
-  const getSubmissionAction = () => {
-    const menuData = createMenuData();
+    // Required validation
+    if (rule.required && !value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    }
 
-    if (formState.addMode) {
-      return dispatch(createMenu(menuData)).unwrap();
-    } else {
-      return dispatch(
-        updateMenu({
-          menuId: formState.editingMenu.id,
-          menuData,
-        })
+    // Pattern validation
+    if (rule.pattern && value && !rule.pattern.test(value)) {
+      return rule.message;
+    }
+
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(VALIDATION_RULES).forEach((field) => {
+      const error = validateField(field, formData[field]);
+      newErrors[field] = error;
+      if (error) isValid = false;
+    });
+
+    setFormErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleAddOrEditMenu = async () => {
+    setIsSubmitting(true);
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await dispatch(
+        addMode ? createMenu(formData) : updateMenu({ ...formData, id: editingMenu.id })
       ).unwrap();
+      resetForm();
+      addMode ? resetForm() : handleSwitchToAddMode();
+    } catch (error) {
+      return;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // ==================== FORM SUBMISSION ====================
-  const { onSubmit: baseOnSubmit, isSubmitting } = useFormSubmission({
-    action: getSubmissionAction,
-    validateForm: validation.validateForm,
-  });
-
-  /**
-   * Handles post-submission form reset based on mode
-   * @param {boolean} wasInAddMode - Whether form was in add mode before submission
-   */
-  const handlePostSubmissionReset = (wasInAddMode) => {
-    if (wasInAddMode) {
-      validation.resetForm();
-    } else {
-      switchToAddMode();
-    }
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setFormErrors(INITIAL_FORM_ERRORS);
   };
 
-  /**
-   * Handles form submission with post-submission logic
-   * @param {Event} e - Form submission event
-   */
-  const onSubmit = async (e) => {
-    const wasInAddMode = formState.addMode;
-    await baseOnSubmit(e);
-    handlePostSubmissionReset(wasInAddMode);
-  };
-
-  /**
-   * Handles menu activation
-   * @param {string} id - Menu ID to activate
-   */
   const handleActivateMenu = (id) => {
     dispatch(activateMenu(id));
   };
 
-  /**
-   * Checks if we're deleting the currently edited menu
-   * @param {string} menuId - ID of menu being deleted
-   * @returns {boolean} True if deleting currently edited menu
-   */
-  const isDeletingCurrentMenu = (menuId) => {
-    return !formState.addMode && formState.editingMenu && formState.editingMenu.id === menuId;
-  };
+  const handleDeleteMenu = (menuId) => {
+    dispatch(deleteMenu(menuId));
 
-  /**
-   * Handles menu deletion and form state cleanup
-   * @param {string} id - Menu ID to delete
-   */
-  const handleDelete = (id) => {
-    dispatch(deleteMenu(id));
-
-    if (isDeletingCurrentMenu(id)) {
-      switchToAddMode();
+    // If we're deleting the currently edited menu, switch back to add mode
+    if (editingMenu && editingMenu.id === menuId) {
+      handleSwitchToAddMode();
     }
   };
 
-  /**
-   * Handles direct menu editing (alternative to form-based editing)
-   * @param {string} id - Menu ID to edit
-   * @param {Object} menuData - Menu data to update
-   */
-  const handleEditMenu = (id, menuData) => {
-    dispatch(updateMenu({ menuId: id, menuData }));
+  // Mode switching functions (now using internal state)
+  const handleSwitchToAddMode = () => {
+    resetForm();
+    setAddMode(true);
+    setEditingMenu(null);
   };
 
-  /**
-   * Sets form state for edit mode
-   * @param {Object} menu - Menu object to edit
-   */
-  const setEditModeState = (menu) => {
-    setFormState({
-      addMode: false,
-      editingMenu: menu,
-      originalMenuName: menu.name,
-    });
+  const handleSwitchToEditMode = (menu) => {
+    resetForm();
+    setEditingMenu(menu);
+    setAddMode(false);
+    setFormData((prev) => ({ ...prev, name: menu.name }));
+
+    scrollToTop();
   };
 
-  /**
-   * Populates form with menu data and scrolls to top
-   * @param {Object} menu - Menu object to populate form with
-   */
-  const populateFormAndScroll = (menu) => {
-    validation.setFieldValue('menuName', menu.name);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  /**
-   * Switches form to edit mode
-   * @param {Object} menu - Menu object to edit
-   */
-  const switchToEditMode = (menu) => {
-    setEditModeState(menu);
-    populateFormAndScroll(menu);
-  };
-
-  /**
-   * Sets form state for add mode
-   */
-  const setAddModeState = () => {
-    setFormState({
-      addMode: true,
-      editingMenu: null,
-      originalMenuName: '',
-    });
-  };
-
-  /**
-   * Switches form to add mode
-   */
-  const switchToAddMode = () => {
-    setAddModeState();
-    validation.resetForm();
-  };
-
-  // ==================== COMPUTED VALUES ====================
-
-  /**
-   * Determines if form has unsaved changes in edit mode
-   * @returns {boolean} True if form has changes
-   */
-  const hasChanges =
-    !formState.addMode && validation.formData.menuName !== formState.originalMenuName;
-
-  // ==================== PUBLIC API ====================
   return {
     // Data
     menus,
-    formData: validation.formData,
-    isSubmitting,
+    formData,
 
     // State
-    addMode: formState.addMode,
-    editingMenu: formState.editingMenu,
-    hasChanges,
-    isCreating,
-    isDeleting,
-    isUpdating,
+    addMode,
+    editingMenu,
 
-    // Form Handlers
-    handleInputChange: validation.handleInputChange,
-    onSubmit,
-
-    // Menu Operations
+    // Handlers
+    handleInputChange,
+    handleAddOrEditMenu,
+    handleDeleteMenu,
     handleActivateMenu,
-    handleDelete,
-    handleEditMenu,
-
-    // Mode Management
-    switchToEditMode,
-    switchToAddMode,
+    handleSwitchToAddMode,
+    handleSwitchToEditMode,
 
     // Validation
-    hasError: validation.hasError,
-    getError: validation.getError,
-    clearFormErrors: validation.clearErrors,
+    validateForm,
+    validateField,
+    formErrors,
+    isSubmitting,
+
+    // Actions
+    setFormData,
+    setFormErrors,
+    setAddMode,
+    setEditingMenu,
   };
 };
 

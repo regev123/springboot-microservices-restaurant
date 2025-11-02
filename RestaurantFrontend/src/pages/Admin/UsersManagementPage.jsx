@@ -12,19 +12,43 @@ const UsersManagementPage = () => {
   const { renderPage } = usePageData(new UsersPageStrategy());
 
   // Single instance of the hook at page level
-  const userManagementProps = useUserManagementForm();
+  const {
+    formData,
+    addMode,
+    editingUser,
+    handleInputChange,
+    handleAddOrEditUser,
+    handleSwitchToEditMode,
+    handleDeleteUser,
+    handleSwitchToAddMode,
+    addFormErrors,
+    updateFormErrors,
+    isSubmitting,
+    roles,
+  } = useUserManagementForm();
 
   return renderPage(
     <PageLayout>
       {/* User Management Form - receives props from page-level hook */}
-      <UserManagementForm {...userManagementProps} />
+      <UserManagementForm
+        formData={formData}
+        addMode={addMode}
+        editingUser={editingUser}
+        handleInputChange={handleInputChange}
+        handleAddOrEditUser={handleAddOrEditUser}
+        handleSwitchToAddMode={handleSwitchToAddMode}
+        addFormErrors={addFormErrors}
+        updateFormErrors={updateFormErrors}
+        isSubmitting={isSubmitting}
+        roles={roles}
+      />
 
       {/* Users Table Section - receives only the handlers it needs */}
       <GlassCard>
         <SectionHeader title="Users List" description="Manage existing users and their roles" />
         <UsersTableForm
-          handleEditUser={userManagementProps.handleEditUser}
-          handleDeleteUser={userManagementProps.handleDeleteUser}
+          handleSwitchToEditMode={handleSwitchToEditMode}
+          handleDeleteUser={handleDeleteUser}
         />
       </GlassCard>
     </PageLayout>

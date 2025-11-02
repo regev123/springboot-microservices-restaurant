@@ -32,4 +32,9 @@ public class MenuServiceExceptionHandler extends GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidCategoryOrder(InvalidCategoryOrderException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Category Order", ex.getMessage());
     }
+
+    @ExceptionHandler(MenuItemAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleMenuItemAlreadyExists(MenuItemAlreadyExistsException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Duplicate Menu Items", ex.getMessage());
+    }
 }

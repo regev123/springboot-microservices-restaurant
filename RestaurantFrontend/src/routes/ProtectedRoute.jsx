@@ -1,18 +1,17 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Outlet } from 'react-router-dom';
-import { ROUTES } from '../constants';
 
 const ProtectedRoute = ({ roles }) => {
   const token = localStorage.getItem('token');
   const user = useSelector((state) => state.auth.user) || {};
 
   if (!token) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (roles && user && !roles.includes(user.role)) {
-    return <Navigate to={ROUTES.HOME} replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <Outlet />;

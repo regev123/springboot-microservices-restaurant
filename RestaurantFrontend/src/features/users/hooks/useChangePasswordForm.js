@@ -1,13 +1,39 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { changePassword } from '../../../store/thunks/authThunks';
-import { NAVIGATION_LINKS } from '../../../constants';
-import useValidationForm from '../../validation/hooks/useValidationForm';
-import useFormSubmission from '../../../hooks/useFormSubmission';
-import {
-  CHANGE_PASSWORD_VALIDATION_RULES,
-  CHANGE_PASSWORD_INITIAL_DATA,
-} from '../../validation/configs/user/changePasswordValidationConfig';
+
+// Constants
+const INITIAL_FORM_DATA = {
+  email: '',
+  oldPassword: '',
+  newPassword: '',
+};
+
+const INITIAL_ERRORS = {
+  email: '',
+  oldPassword: '',
+  newPassword: '',
+};
+
+const VALIDATION_RULES = {
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: 'Email should be valid',
+  },
+  oldPassword: {
+    required: true,
+    pattern: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/,
+    message:
+      'Password must be at least 8 characters long and include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
+  },
+  newPassword: {
+    required: true,
+    pattern: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/,
+    message:
+      'Password must be at least 8 characters long and include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
+  },
+};
 
 /**
  * Change password form hook - manages form state, validation, and password change
@@ -17,29 +43,85 @@ import {
 const useChangePasswordForm = () => {
   const dispatch = useDispatch();
 
-  // Use validation form hook
-  const { formData, handleInputChange, validateForm, hasError, getError } = useValidationForm(
-    CHANGE_PASSWORD_VALIDATION_RULES,
-    CHANGE_PASSWORD_INITIAL_DATA
-  );
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [errors, setErrors] = useState(INITIAL_ERRORS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Use form submission hook
-  const { onSubmit, isSubmitting } = useFormSubmission({
-    action: () => dispatch(changePassword(formData)).unwrap(),
-    validateForm,
-  });
+  // Validation functions
+  const validateField = (name, value) => {
+    const rule = VALIDATION_RULES[name];
+    if (!rule) return '';
 
-  // Navigation links
-  const navigationLinks = useMemo(() => [NAVIGATION_LINKS.AUTH.BACK_TO_LOGIN], []);
+    // Required validation
+    if (rule.required && !value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    }
+
+    // Pattern validation (for email and password)
+    if (rule.pattern && value && !rule.pattern.test(value)) {
+      return rule.message;
+    }
+
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(VALIDATION_RULES).forEach((field) => {
+      const error = validateField(field, formData[field]);
+      newErrors[field] = error;
+      if (error) isValid = false;
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setErrors(INITIAL_ERRORS);
+  };
+
+  const handleChangePassword = async () => {
+    setIsSubmitting(true);
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await dispatch(changePassword(formData)).unwrap();
+      resetForm();
+    } catch (error) {
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
     formData,
-    handleInputChange,
-    onSubmit,
+    errors,
     isSubmitting,
-    navigationLinks,
-    hasError,
-    getError,
+    handleInputChange,
+    handleChangePassword,
   };
 };
 

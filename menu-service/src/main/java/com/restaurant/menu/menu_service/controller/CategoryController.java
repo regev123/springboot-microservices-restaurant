@@ -3,6 +3,7 @@ package com.restaurant.menu.menu_service.controller;
 import com.restaurant.common.annotation.RequiresRole;
 import com.restaurant.menu.menu_service.dto.Category.CategoryDtoResponse;
 import com.restaurant.menu.menu_service.dto.Category.CreateCategoryDtoRequest;
+import com.restaurant.menu.menu_service.dto.Category.UpdateCategoryDtoRequest;
 import com.restaurant.menu.menu_service.dto.Category.UpdateOrderDtoRequest;
 import com.restaurant.menu.menu_service.service.CategoryService;
 import jakarta.validation.Valid;
@@ -44,6 +45,21 @@ public class CategoryController {
     }
 
     // ---------------------------------------------------------------------
+    // Endpoint: Update Category (ADMIN)
+    // ---------------------------------------------------------------------
+    /**
+     * Update an existing category. Admin only.
+     *
+     * @param request category update payload containing ID, name, and description
+     * @return the updated category
+     */
+    @PutMapping("/admin/update")
+    @RequiresRole("ADMIN")
+    public ResponseEntity<CategoryDtoResponse> updateCategory(@Valid @RequestBody UpdateCategoryDtoRequest request) {
+        return ResponseEntity.ok(categoryService.updateCategory(request.getId(), request.getName(), request.getDescription()));
+    }
+
+    // ---------------------------------------------------------------------
     // Endpoint: Delete Category (ADMIN)
     // ---------------------------------------------------------------------
     /**
@@ -53,9 +69,9 @@ public class CategoryController {
      */
     @DeleteMapping("/admin/{categoryId}")
     @RequiresRole("ADMIN")
-    public ResponseEntity<Void> deleteCategory(@PathVariable("categoryId") Long categoryId) {
-        categoryService.deleteCategory(categoryId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<List<CategoryDtoResponse>> deleteCategory(@PathVariable("categoryId") Long categoryId) {
+        List<CategoryDtoResponse> updatedCategories = categoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok(updatedCategories);
     }
 
     // ---------------------------------------------------------------------
@@ -72,7 +88,6 @@ public class CategoryController {
     @RequiresRole("ADMIN")
     public ResponseEntity<List<CategoryDtoResponse>> updateCategoryOrder(
             @Valid @RequestBody List<UpdateOrderDtoRequest> orderChanges) {
-        log.info("Updating category order: {}", orderChanges);
         List<CategoryDtoResponse> updatedCategories = categoryService.updateCategoryOrder(orderChanges);
         return ResponseEntity.ok(updatedCategories);
     }

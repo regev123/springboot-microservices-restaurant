@@ -1,5 +1,17 @@
 import React from 'react';
-import { Trash2, Lock, Unlock, Save, Edit, X, Check, Ban, Plus } from 'lucide-react';
+import {
+  Trash2,
+  Lock,
+  Unlock,
+  Save,
+  Edit,
+  X,
+  Check,
+  Ban,
+  Plus,
+  Home,
+  ArrowLeft,
+} from 'lucide-react';
 
 const icons = {
   delete: <Trash2 size={16} />, // Delete icon
@@ -11,6 +23,8 @@ const icons = {
   enable: <Check size={16} />, // Enable ✅
   disable: <Ban size={16} />, // Disable 🚫
   add: <Plus size={16} />, // Add ➕
+  home: <Home size={16} />, // Home 🏠
+  'arrow-left': <ArrowLeft size={16} />, // Arrow Left ⬅️
 };
 
 const Button = ({
@@ -18,7 +32,7 @@ const Button = ({
   onClick,
   type = 'button',
   variant = 'primary',
-  icon, // "delete" | "lock" | "unlock" | "save" | "edit" | "cancel" | "enable" | "disable" | "add"
+  icon, // "delete" | "lock" | "unlock" | "save" | "edit" | "cancel" | "enable" | "disable" | "add" | "home" | "arrow-left"
   disabled = false,
   size = 'default', // 'small' | 'default' | 'large' | 'xlarge'
   fullWidth = false,

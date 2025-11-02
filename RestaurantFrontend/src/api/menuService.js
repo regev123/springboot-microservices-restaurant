@@ -10,7 +10,7 @@ const menuService = {
     (await api.delete(`/menu/categories/admin/${categoryId}`)).data,
 
   updateCategory: async (categoryId, categoryData) =>
-    (await api.put(`/menu/categories/admin/${categoryId}`, categoryData)).data,
+    (await api.put('/menu/categories/admin/update', { id: categoryId, ...categoryData })).data,
 
   updateCategoryOrder: async (orderChanges) =>
     (await api.put('/menu/categories/admin/update-order', orderChanges)).data,
@@ -23,8 +23,39 @@ const menuService = {
 
   activateMenu: async (menuId) => (await api.put(`/menu/admin/${menuId}/activate`)).data,
 
-  updateMenu: async (menuId, menuData) =>
-    (await api.put('/menu/admin/update', { id: menuId, ...menuData })).data,
+  updateMenu: async (id, name) => (await api.put('/menu/admin/update', { id, name })).data,
+
+  fetchMenuItems: async () => (await api.get('/menu/items/all')).data,
+
+  createMenuItem: async (menuItem) => (await api.post('/menu/items/admin/create', menuItem)).data,
+
+  updateMenuItem: async (menuItem) => (await api.put('/menu/items/admin/update', menuItem)).data,
+
+  deleteMenuItem: async (menuItemId) =>
+    (await api.delete(`/menu/items/admin/delete/${menuItemId}`)).data,
+
+  fetchKitchenStations: async () => (await api.get('/menu/kitchen-stations/all')).data,
+
+  createKitchenStation: async (kitchenStation) =>
+    (await api.post('/menu/kitchen-stations/admin/create', kitchenStation)).data,
+
+  updateKitchenStation: async (kitchenStation) =>
+    (await api.put('/menu/kitchen-stations/admin/update', kitchenStation)).data,
+
+  deleteKitchenStation: async (kitchenStationId) =>
+    (await api.delete(`/menu/kitchen-stations/admin/delete/${kitchenStationId}`)).data,
+
+  fetchKitchenStationMenuItems: async (kitchenStationId) =>
+    (await api.get(`/menu/kitchen-stations/${kitchenStationId}/menu-items`)).data,
+
+  updateKitchenStationMenuItems: async (assignments) =>
+    (await api.put('/menu/kitchen-stations/admin/update-menu-items', assignments)).data,
+
+  fetchMenuMenuItems: async (menuId) =>
+    (await api.get(`/menu/${menuId}/menu-items`)).data,
+
+  updateMenuMenuItems: async (assignments) =>
+    (await api.put('/menu/admin/update-menu-items', assignments)).data,
 };
 
 export default menuService;

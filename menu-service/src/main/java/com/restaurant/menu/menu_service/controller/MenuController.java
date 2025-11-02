@@ -5,6 +5,8 @@ import com.restaurant.menu.menu_service.dto.Menu.CreateMenuDtoRequest;
 import com.restaurant.menu.menu_service.dto.Menu.MenuDtoResponse;
 import com.restaurant.menu.menu_service.dto.Menu.StatusDtoResponse;
 import com.restaurant.menu.menu_service.dto.Menu.UpdateMenuDtoRequest;
+import com.restaurant.menu.menu_service.dto.Menu.UpdateMenuMenuItemsRequest;
+import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.service.MenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -117,5 +119,34 @@ public class MenuController {
     public ResponseEntity<List<StatusDtoResponse>> getAllStatuses() {
         return ResponseEntity.ok(menuService.getAllStatuses());
     }
+
+    // ---------------------------------------------------------------------
+    // Endpoint: Update Menu Menu Items Assignments (ADMIN)
+    // ---------------------------------------------------------------------
+    /**
+     * Batch update menu items assigned to menus.
+     * Accepts a map of menuId -> Set of menuItemIds.
+     * Example: { "1": [3, 4, 12], "2": [5, 6] }
+     */
+    @PutMapping("/admin/update-menu-items")
+    @RequiresRole("ADMIN")
+    public ResponseEntity<List<MenuDtoResponse>> updateMenuMenuItems(
+            @Valid @RequestBody UpdateMenuMenuItemsRequest request
+    ) {
+        return ResponseEntity.ok(menuService.updateMenuMenuItems(request));
+    }
+
+    // ---------------------------------------------------------------------
+    // Endpoint: Get Menu's Menu Items (PUBLIC)
+    // ---------------------------------------------------------------------
+    /**
+     * Get menu items assigned to a specific menu by ID.
+     */
+    @GetMapping("/{menuId}/menu-items")
+    public ResponseEntity<List<MenuItemDto>> getMenuMenuItems(@PathVariable("menuId") Long menuId) {
+        return ResponseEntity.ok(menuService.getMenuItemsByMenuId(menuId));
+    }
+
+    
 }
 

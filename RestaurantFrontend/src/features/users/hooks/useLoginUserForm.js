@@ -1,13 +1,31 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../../../store/thunks/authThunks';
-import { NAVIGATION_LINKS } from '../../../constants';
-import useValidationForm from '../../validation/hooks/useValidationForm';
-import useFormSubmission from '../../../hooks/useFormSubmission';
-import {
-  LOGIN_VALIDATION_RULES,
-  LOGIN_INITIAL_DATA,
-} from '../../validation/configs/user/loginValidationConfig';
+
+// Constants
+const INITIAL_FORM_DATA = {
+  email: '',
+  password: '',
+};
+
+const INITIAL_ERRORS = {
+  email: '',
+  password: '',
+};
+
+const VALIDATION_RULES = {
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: 'Email should be valid',
+  },
+  password: {
+    required: true,
+    pattern: /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/,
+    message:
+      'Password must be at least 8 characters long and include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
+  },
+};
 
 /**
  * Login form hook - manages form state, validation, and authentication
@@ -17,30 +35,85 @@ import {
 const useLoginUserForm = () => {
   const dispatch = useDispatch();
 
-  // Use validation form hook
-  const { formData, handleInputChange, validateForm, hasError, getError } = useValidationForm(
-    LOGIN_VALIDATION_RULES,
-    LOGIN_INITIAL_DATA
-  );
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [errors, setErrors] = useState(INITIAL_ERRORS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Use form submission hook
-  const { onSubmit, isSubmitting } = useFormSubmission({
-    action: () => dispatch(loginUser(formData)).unwrap(),
-    validateForm,
-  });
+  // Validation functions
+  const validateField = (name, value) => {
+    const rule = VALIDATION_RULES[name];
+    if (!rule) return '';
 
-  // Navigation links
-  const navigationLinks = useMemo(() => [NAVIGATION_LINKS.AUTH.CHANGE_PASSWORD], []);
+    // Required validation
+    if (rule.required && !value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    }
 
-  // Return form interface
+    // Pattern validation (for email and password)
+    if (rule.pattern && value && !rule.pattern.test(value)) {
+      return rule.message;
+    }
+
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(VALIDATION_RULES).forEach((field) => {
+      const error = validateField(field, formData[field]);
+      newErrors[field] = error;
+      if (error) isValid = false;
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleLogin = async () => {
+    setIsSubmitting(true);
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await dispatch(loginUser(formData)).unwrap();
+      resetForm();
+    } catch (error) {
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setErrors(INITIAL_ERRORS);
+  };
+
   return {
     formData,
-    handleInputChange,
-    onSubmit,
+    errors,
     isSubmitting,
-    navigationLinks,
-    hasError,
-    getError,
+    handleInputChange,
+    handleLogin,
   };
 };
 

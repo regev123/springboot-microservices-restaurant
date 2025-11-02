@@ -6,15 +6,8 @@ import FormSpinner from '../../../../components/common/Spinner/Spinner';
 import useChangePasswordForm from '../../hooks/useChangePasswordForm';
 
 const ChangePasswordForm = () => {
-  const {
-    formData,
-    handleInputChange,
-    onSubmit,
-    isSubmitting,
-    navigationLinks,
-    hasError,
-    getError,
-  } = useChangePasswordForm();
+  const { formData, errors, isSubmitting, handleInputChange, handleChangePassword } =
+    useChangePasswordForm();
 
   return (
     <div className="space-y-6">
@@ -28,7 +21,7 @@ const ChangePasswordForm = () => {
         value={formData.email}
         onChange={(e) => handleInputChange('email', e.target.value)}
         required={true}
-        error={hasError('email') ? getError('email') : ''}
+        error={errors.email}
       />
 
       <Input
@@ -37,7 +30,7 @@ const ChangePasswordForm = () => {
         value={formData.oldPassword}
         onChange={(e) => handleInputChange('oldPassword', e.target.value)}
         required={true}
-        error={hasError('oldPassword') ? getError('oldPassword') : ''}
+        error={errors.oldPassword}
       />
 
       <Input
@@ -46,13 +39,13 @@ const ChangePasswordForm = () => {
         value={formData.newPassword}
         onChange={(e) => handleInputChange('newPassword', e.target.value)}
         required={true}
-        error={hasError('newPassword') ? getError('newPassword') : ''}
+        error={errors.newPassword}
       />
 
       <Button
         text="Change Password"
-        type="submit"
-        onClick={onSubmit}
+        type="button"
+        onClick={handleChangePassword}
         fullWidth={true}
         size="xlarge"
         disabled={isSubmitting}
@@ -60,7 +53,7 @@ const ChangePasswordForm = () => {
 
       <FormSpinner show={isSubmitting} text="Changing Password..." />
 
-      <NavigateLink links={navigationLinks} />
+      <NavigateLink links={[{ to: '/login', text: 'Login' }]} />
     </div>
   );
 };

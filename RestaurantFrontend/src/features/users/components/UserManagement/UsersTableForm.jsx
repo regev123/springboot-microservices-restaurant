@@ -4,7 +4,7 @@ import Table from '../../../../components/common/Table/Table';
 import ButtonGroup from '../../../../components/common/ButtonGroup/ButtonGroup';
 import useDateFormat from '../../../../hooks/useDateFormat';
 
-const UsersTableForm = ({ handleEditUser, handleDeleteUser }) => {
+const UsersTableForm = ({ handleSwitchToEditMode, handleDeleteUser }) => {
   const users = useSelector((state) => state.admin.users);
   const { formatDateWithoutHour } = useDateFormat();
 
@@ -28,7 +28,7 @@ const UsersTableForm = ({ handleEditUser, handleDeleteUser }) => {
         buttons={[
           {
             icon: 'edit',
-            onClick: () => handleEditUser(row),
+            onClick: () => handleSwitchToEditMode(row),
             title: 'Edit User',
           },
           {

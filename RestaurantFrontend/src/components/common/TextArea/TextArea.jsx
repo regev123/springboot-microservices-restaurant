@@ -79,7 +79,7 @@ const TextArea = React.forwardRef(
 
           {/* Character count */}
           {maxLength && (
-            <div className="absolute bottom-2 right-3 text-xs text-slate-400">
+            <div className="absolute bottom-2 right-3 text-xs text-slate-400 pointer-events-none">
               {value?.length || 0}/{maxLength}
             </div>
           )}

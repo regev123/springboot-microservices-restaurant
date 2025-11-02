@@ -1,48 +1,48 @@
 package com.restaurant.menu.menu_service.dto.MenuItem;
 
+import com.restaurant.menu.menu_service.entity.Ingredient;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 /**
- * Request DTO for creating a new menu item with optional ingredients.
+ * Request DTO for creating a menu item.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class CreateMenuItemDtoRequest {
-
-    /** Identifier of the menu the item belongs to. */
-    @NotNull(message = "Menu ID is required")
-    private Long menuId;
-
-    /** Identifier of the category the item belongs to. */
+    
+    /** Associated category identifier. */
     @NotNull(message = "Category ID is required")
+    @Positive(message = "Category ID must be a positive number")
     private Long categoryId;
-
+    
     /** Item name. */
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name cannot be longer than 100 characters")
-    private String name;
-
+    @NotBlank(message = "Menu Item name is required")
+    @Size(min = 2, max = 100, message = "Menu Item name must be between 2 and 100 characters")
+    private String name;    
+    
     /** Optional item description. */
-    @Size(max = 255, message = "Description cannot be longer than 255 characters")
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
-
-    /** Item price. Must be greater than zero. */
+    
+    /** Price in the restaurant's currency. */
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", message = "Price must be greater than zero")
+    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    @DecimalMax(value = "999.99", message = "Price cannot exceed 999.99")
     private BigDecimal price;
-
-    /** Optional list of ingredient definitions. */
+    
+    /** Availability flag indicating if the item can be ordered. */
+    @NotNull(message = "Availability flag is required")
+    private Boolean isAvailable;
+    
+    /** Set of ingredients for this menu item. */
     @Valid
-    private List<CreateIngredientDtoRequest> ingredients;
+    private Set<Ingredient> ingredients;
 }

@@ -6,35 +6,149 @@ import {
   updateCategory,
   updateCategoryOrder,
 } from '../../../store/thunks/menuThunks';
+import { scrollToTop } from '../../../utils/scrollUtils';
+
+// Constants for Add Category Mode
+const INITIAL_FORM_DATA = {
+  name: '',
+  description: '',
+};
+
+const INITIAL_FORM_ERRORS = {
+  name: '',
+  description: '',
+};
 
 const VALIDATION_RULES = {
-  NAME: {
-    REQUIRED: 'Category name is required',
-    MIN_LENGTH: 2,
-    MAX_LENGTH: 50,
-    MIN_LENGTH_ERROR: 'Category name must be at least 2 characters',
-    MAX_LENGTH_ERROR: 'Category name must not exceed 50 characters',
+  name: {
+    required: true,
+    pattern: /^[A-Za-z0-9\s\-'&.,]{2,50}$/,
+    message:
+      'Category name is required and must be 2-50 characters containing only letters, numbers, spaces, hyphens, apostrophes, ampersands, periods, and commas',
   },
-  DESCRIPTION: {
-    MAX_LENGTH: 500,
-    MAX_LENGTH_ERROR: 'Category description cannot exceed 500 characters',
+  description: {
+    required: false,
+    maxLength: 500,
+    message: 'Category description cannot exceed 500 characters',
   },
 };
 
+/**
+ * Comprehensive hook for managing category management page
+ * Combines state management, validation, and actions in a single file
+ * Follows SOLID principles and clean code concepts
+ */
 const useCategoryManagerForm = () => {
-  const [formData, setFormData] = useState({
-    categoryName: '',
-    categoryDescription: '',
-  });
-  const [validationErrors, setValidationErrors] = useState({});
+  const { categories } = useSelector((state) => state.menu);
+  const dispatch = useDispatch();
+
   const [addMode, setAddMode] = useState(true);
   const [editingCategory, setEditingCategory] = useState(null);
+
   const [localCategories, setLocalCategories] = useState([]);
   const [hasOrderChanges, setHasOrderChanges] = useState(false);
   const [originalCategories, setOriginalCategories] = useState([]);
 
-  const dispatch = useDispatch();
-  const { categories } = useSelector((state) => state.menu);
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [formErrors, setFormErrors] = useState(INITIAL_FORM_ERRORS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validation functions
+  const validateField = (name, value) => {
+    const rule = VALIDATION_RULES[name];
+    if (!rule) return '';
+
+    // Required validation
+    if (rule.required && !value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    }
+
+    // Pattern validation
+    if (rule.pattern && value && !rule.pattern.test(value)) {
+      return rule.message;
+    }
+
+    // MaxLength validation
+    if (rule.maxLength && value && value.length > rule.maxLength) {
+      return rule.message;
+    }
+
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(VALIDATION_RULES).forEach((field) => {
+      const error = validateField(field, formData[field] || '');
+      newErrors[field] = error;
+      if (error) isValid = false;
+    });
+
+    setFormErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleAddOrEditCategory = async () => {
+    setIsSubmitting(true);
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await dispatch(
+        addMode ? createCategory(formData) : updateCategory({ ...formData, id: editingCategory.id })
+      ).unwrap();
+      resetForm();
+      addMode ? resetForm() : handleSwitchToAddMode();
+    } catch (error) {
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setFormErrors(INITIAL_FORM_ERRORS);
+  };
+
+  // Mode switching functions (now using internal state)
+  const handleSwitchToAddMode = () => {
+    resetForm();
+    setAddMode(true);
+    setEditingCategory(null);
+  };
+
+  const handleSwitchToEditMode = (category) => {
+    resetForm();
+    setEditingCategory(category);
+    setAddMode(false);
+    setFormData((prev) => ({
+      ...prev,
+      name: category.name,
+      description: category.description || '',
+    }));
+
+    scrollToTop();
+  };
 
   // Initialize local categories when categories change
   useEffect(() => {
@@ -43,245 +157,97 @@ const useCategoryManagerForm = () => {
     setHasOrderChanges(false);
   }, [categories]);
 
-  useEffect(() => {
-    if (Object.keys(validationErrors).length > 0) {
-      clearFormErrors();
+  const handleDeleteCategory = (id) => {
+    dispatch(deleteCategory(id));
+
+    if (editingCategory && editingCategory.id === id) {
+      handleSwitchToAddMode();
     }
-  }, [formData.categoryName, formData.categoryDescription]);
-
-  const clearFormErrors = () => {
-    setValidationErrors({});
   };
 
-  /**
-   * Checks if the current local order is different from the original order
-   * @param {Array} currentCategories - Current local categories
-   * @returns {boolean} True if there are actual order changes
-   */
-  const hasActualOrderChanges = (currentCategories = localCategories) => {
-    if (currentCategories.length !== originalCategories.length) {
-      return true;
+  const swapCategories = (categories, fromIndex, toIndex) => {
+    const newCategories = [...categories];
+    [newCategories[fromIndex], newCategories[toIndex]] = [
+      newCategories[toIndex],
+      newCategories[fromIndex],
+    ];
+    return newCategories;
+  };
+
+  const updateLocalCategories = (newCategories) => {
+    setLocalCategories(newCategories);
+    setHasOrderChanges(true);
+  };
+
+  const handleMoveUp = (category) => {
+    setHasOrderChanges(true);
+    const currentIndex = localCategories.findIndex((cat) => cat.id === category.id);
+    if (currentIndex > 0) {
+      const newCategories = swapCategories(localCategories, currentIndex, currentIndex - 1);
+      updateLocalCategories(newCategories);
     }
-
-    // Check if any category has a different position
-    return currentCategories.some((currentCat, index) => {
-      const originalCat = originalCategories[index];
-      return !originalCat || currentCat.id !== originalCat.id;
-    });
   };
 
-  const validateCategoryName = (name) => {
-    const errors = {};
-
-    if (!name || !name.trim()) {
-      errors.name = VALIDATION_RULES.NAME.REQUIRED;
-    } else if (name.trim().length < VALIDATION_RULES.NAME.MIN_LENGTH) {
-      errors.name = VALIDATION_RULES.NAME.MIN_LENGTH_ERROR;
-    } else if (name.trim().length > VALIDATION_RULES.NAME.MAX_LENGTH) {
-      errors.name = VALIDATION_RULES.NAME.MAX_LENGTH_ERROR;
+  const handleMoveDown = (category) => {
+    setHasOrderChanges(true);
+    const currentIndex = localCategories.findIndex((cat) => cat.id === category.id);
+    if (currentIndex < localCategories.length - 1) {
+      const newCategories = swapCategories(localCategories, currentIndex, currentIndex + 1);
+      updateLocalCategories(newCategories);
     }
-
-    return errors;
   };
 
-  const validateCategoryDescription = (description) => {
-    const errors = {};
-
-    if (description && description.trim().length > VALIDATION_RULES.DESCRIPTION.MAX_LENGTH) {
-      errors.description = VALIDATION_RULES.DESCRIPTION.MAX_LENGTH_ERROR;
-    }
-
-    return errors;
-  };
-
-  const validateForm = () => {
-    const nameErrors = validateCategoryName(formData.categoryName);
-    const descriptionErrors = validateCategoryDescription(formData.categoryDescription);
-
-    const allErrors = { ...nameErrors, ...descriptionErrors };
-    setValidationErrors(allErrors);
-
-    return Object.keys(allErrors).length === 0;
-  };
-
-  const handleCreateCategory = () => {
-    clearFormErrors();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    dispatch(
-      createCategory({
-        name: formData.categoryName.trim(),
-        description: formData.categoryDescription.trim() || null,
-      })
-    );
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
+  const createOrderChangesPayload = () => {
+    return localCategories.map((cat, index) => ({
+      id: cat.id,
+      newOrder: index + 1,
     }));
   };
 
-  const handleDeleteCategory = (id) => {
-    dispatch(deleteCategory(id));
-  };
-
-  /**
-   * Moves a category up in the order (local state only)
-   * @param {Object} category - Category to move up
-   */
-  const handleMoveUp = (category) => {
-    const currentIndex = localCategories.findIndex((cat) => cat.id === category.id);
-    if (currentIndex > 0) {
-      const newCategories = [...localCategories];
-      [newCategories[currentIndex], newCategories[currentIndex - 1]] = [
-        newCategories[currentIndex - 1],
-        newCategories[currentIndex],
-      ];
-
-      // Update local state and check for actual changes
-      setLocalCategories(newCategories);
-      setHasOrderChanges(hasActualOrderChanges(newCategories));
-    }
-  };
-
-  /**
-   * Moves a category down in the order (local state only)
-   * @param {Object} category - Category to move down
-   */
-  const handleMoveDown = (category) => {
-    const currentIndex = localCategories.findIndex((cat) => cat.id === category.id);
-    if (currentIndex < localCategories.length - 1) {
-      const newCategories = [...localCategories];
-      [newCategories[currentIndex], newCategories[currentIndex + 1]] = [
-        newCategories[currentIndex + 1],
-        newCategories[currentIndex],
-      ];
-
-      // Update local state and check for actual changes
-      setLocalCategories(newCategories);
-      setHasOrderChanges(hasActualOrderChanges(newCategories));
-    }
-  };
-
-  /**
-   * Switches to edit mode and populates form with category data
-   * @param {Object} category - Category to edit
-   */
-  const switchToEditMode = (category) => {
-    setEditingCategory(category);
-    setAddMode(false);
-
-    // Populate form with category data
-    handleInputChange('categoryName', category.name);
-    handleInputChange('categoryDescription', category.description || '');
-
-    // Scroll to category management section
-    setTimeout(() => {
-      const scrollPosition = window.innerHeight * 0.95;
-      window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-    }, 100);
-  };
-
-  /**
-   * Switches back to add mode and clears form
-   */
-  const switchToAddMode = () => {
-    setAddMode(true);
-    setEditingCategory(null);
-
-    // Clear form data
-    handleInputChange('categoryName', '');
-    handleInputChange('categoryDescription', '');
-  };
-
-  /**
-   * Handles form submission based on current mode
-   */
-  const handleSubmit = () => {
-    if (addMode) {
-      handleCreateCategory();
-    } else {
-      handleUpdateCategory(editingCategory.id);
-    }
-  };
-
-  /**
-   * Saves all order changes to the server
-   */
   const saveOrderChanges = () => {
-    const changes = [];
-
-    // Send ALL categories with their new order positions (sequential starting from 1)
-    localCategories.forEach((cat, index) => {
-      const newOrder = index + 1;
-      changes.push({
-        id: cat.id,
-        newOrder,
-      });
-    });
+    const changes = createOrderChangesPayload();
 
     if (changes.length > 0) {
-      console.log('Saving order changes:', changes);
-
-      // Send changes to server via thunk
-      // The useEffect will automatically update local state when categories change
       dispatch(updateCategoryOrder(changes));
     }
+    setHasOrderChanges(false);
   };
 
-  /**
-   * Cancels all order changes and resets to original state
-   */
   const cancelOrderChanges = () => {
-    console.log('Canceling order changes - resetting to original state');
     setLocalCategories(originalCategories);
     setHasOrderChanges(false);
   };
 
-  const handleEditCategory = (category) => {
-    // This function is called when edit button is clicked
-    // The actual form population is handled by switchToEditMode
-    switchToEditMode(category);
-  };
-
-  const handleUpdateCategory = (categoryId) => {
-    clearFormErrors();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    dispatch(
-      updateCategory({
-        id: categoryId,
-        name: formData.categoryName.trim(),
-        description: formData.categoryDescription.trim() || null,
-      })
-    );
-  };
-
   return {
+    // Data
+    categories: localCategories,
     formData,
-    validationErrors,
-    categories: localCategories, // Use local categories for display
+
+    // State
     addMode,
     editingCategory,
     hasOrderChanges,
-    handleEditCategory,
+
+    // Handlers
+    handleInputChange,
+    handleAddOrEditCategory,
+    handleSwitchToEditMode,
     handleDeleteCategory,
     handleMoveUp,
     handleMoveDown,
     saveOrderChanges,
     cancelOrderChanges,
-    handleInputChange,
-    switchToEditMode,
-    switchToAddMode,
-    handleSubmit,
+    handleSwitchToAddMode,
+
+    // Validation
+    validateForm,
+    validateField,
+    formErrors,
+    isSubmitting,
+
+    // Actions
+    setFormData,
+    setFormErrors,
   };
 };
 

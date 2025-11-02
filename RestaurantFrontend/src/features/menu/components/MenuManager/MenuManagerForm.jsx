@@ -5,44 +5,46 @@ import useMenuManagerForm from '../../hooks/useMenuManagerForm';
 
 const MenuManagerForm = () => {
   const {
+    menus,
     formData,
-    handleInputChange,
-    onSubmit,
-    handleActivateMenu,
-    handleDelete,
-    switchToEditMode,
-    switchToAddMode,
     addMode,
     editingMenu,
-    hasChanges,
+    handleInputChange,
+    handleAddOrEditMenu,
+    handleDeleteMenu,
+    handleActivateMenu,
+    handleSwitchToAddMode,
+    handleSwitchToEditMode,
+    formErrors,
     isSubmitting,
-    hasError,
-    getError,
   } = useMenuManagerForm();
 
   return (
-    <>
-      {/* Create/Edit Menu Form Section */}
-      <MenuForm
-        addMode={addMode}
-        editingMenu={editingMenu}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        hasError={hasError}
-        getError={getError}
-        hasChanges={hasChanges}
-        isSubmitting={isSubmitting}
-        onSubmit={onSubmit}
-        switchToAddMode={switchToAddMode}
-      />
+    <div className="grid grid-cols-5 gap-6 ">
+      {/* Left Side - Create/Edit Menu Form Section (20%) */}
+      <div className="col-span-1">
+        <MenuForm
+          addMode={addMode}
+          editingMenu={editingMenu}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          formErrors={formErrors}
+          isSubmitting={isSubmitting}
+          handleAddOrEditMenu={handleAddOrEditMenu}
+          handleSwitchToAddMode={handleSwitchToAddMode}
+        />
+      </div>
 
-      {/* Existing Menus Table */}
-      <MenusTableForm
-        handleEditMenu={switchToEditMode}
-        handleDeleteMenu={handleDelete}
-        handleActivateMenu={handleActivateMenu}
-      />
-    </>
+      {/* Right Side - Existing Menus Table (80%) */}
+      <div className="col-span-4">
+        <MenusTableForm
+          switchToEditMode={handleSwitchToEditMode}
+          handleDeleteMenu={handleDeleteMenu}
+          handleActivateMenu={handleActivateMenu}
+          menus={menus}
+        />
+      </div>
+    </div>
   );
 };
 

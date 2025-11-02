@@ -52,17 +52,17 @@ const Sidebar = () => {
       roles: ['ADMIN'],
       subItems: [
         {
-          id: 'admin-menus',
-          label: 'Menus',
-          icon: '📋',
-          path: '/admin/menu',
-          roles: ['ADMIN'],
-        },
-        {
           id: 'admin-users',
           label: 'Users',
           icon: '👥',
           path: '/admin/users',
+          roles: ['ADMIN'],
+        },
+        {
+          id: 'admin-menus',
+          label: 'Menus',
+          icon: '📋',
+          path: '/admin/menu',
           roles: ['ADMIN'],
         },
         {
