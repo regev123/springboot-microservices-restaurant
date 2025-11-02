@@ -226,7 +226,7 @@ springboot-microservices-restaurant/
 ### **Authentication Endpoints**
 
 ```
-POST /api/auth/register              # User registration
+POST /api/auth/register              # User registration (Admin)
 POST /api/auth/login                 # User login
 POST /api/auth/validate-token        # Token validation
 GET  /api/auth/users                 # Get all users (Admin)
@@ -237,22 +237,22 @@ DELETE /api/auth/users/{id}          # Delete user (Admin)
 ### **Menu Management Endpoints**
 
 ```
-GET    /api/menu/categories          # Get all categories
-POST   /api/menu/categories          # Create category
-PUT    /api/menu/categories/{id}     # Update category
-DELETE /api/menu/categories/{id}     # Delete category
-POST   /api/menu/categories/order    # Update category order
+GET    /api/menu/categories          # Get all categories (Admin)
+POST   /api/menu/categories          # Create category (Admin)
+PUT    /api/menu/categories/{id}     # Update category (Admin)
+DELETE /api/menu/categories/{id}     # Delete category (Admin)
+POST   /api/menu/categories/order    # Update category order (Admin)
 
-GET    /api/menu/items               # Get all menu items
-POST   /api/menu/items               # Create menu item
-PUT    /api/menu/items/{id}          # Update menu item
-DELETE /api/menu/items/{id}          # Delete menu item
+GET    /api/menu/items               # Get all menu items (Admin)
+POST   /api/menu/items               # Create menu item (Admin)
+PUT    /api/menu/items/{id}          # Update menu item (Admin)
+DELETE /api/menu/items/{id}          # Delete menu item (Admin)
 
-GET    /api/menu/menus               # Get all menus
-POST   /api/menu/menus               # Create menu
-PUT    /api/menu/menus/{id}          # Update menu
-DELETE /api/menu/menus/{id}          # Delete menu
-POST   /api/menu/menus/{id}/activate # Activate menu
+GET    /api/menu/menus               # Get all menus (Admin)
+POST   /api/menu/menus               # Create menu (Admin)
+PUT    /api/menu/menus/{id}          # Update menu (Admin)
+DELETE /api/menu/menus/{id}          # Delete menu (Admin) 
+POST   /api/menu/menus/{id}/activate # Activate menu (Admin)
 ```
 
 ## 🎨 **Frontend Features**
