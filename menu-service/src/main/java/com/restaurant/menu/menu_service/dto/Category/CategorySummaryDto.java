@@ -16,4 +16,6 @@ public class CategorySummaryDto {
     private Long id;
     /** Category name. */
     private String name;
+    /** Sort order for displaying categories. */
+    private Integer sortOrder;
 }

@@ -7,6 +7,7 @@ const MenuItemManagerForm = () => {
   const {
     categories,
     addMode,
+    editingMenuItem,
     formData,
     formErrors,
     isSubmitting,
@@ -23,6 +24,7 @@ const MenuItemManagerForm = () => {
       <MenuItemForm
         categories={categories}
         addMode={addMode}
+        editingMenuItem={editingMenuItem}
         formData={formData}
         isSubmitting={isSubmitting}
         formErrors={formErrors}

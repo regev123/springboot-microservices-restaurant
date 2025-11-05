@@ -25,7 +25,7 @@ public class MenuItemMapper implements EntityMapper<MenuItem, MenuItemDto> {
                 item.getDescription(),
                 item.getPrice(),
                 item.getIsAvailable(),
-                item.getCategory() != null ? new CategorySummaryDto(item.getCategory().getId(), item.getCategory().getName()) : null,
+                item.getCategory() != null ? new CategorySummaryDto(item.getCategory().getId(), item.getCategory().getName(), item.getCategory().getSortOrder()) : null,
                 item.getCreatedAt(),
                 item.getUpdatedAt(),
                 item.getIngredients()

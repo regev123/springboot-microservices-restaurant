@@ -4,6 +4,7 @@ import com.restaurant.menu.menu_service.entity.Menu;
 import com.restaurant.menu.menu_service.entity.MenuStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,9 @@ import java.util.Optional;
  */
 public interface MenuRepository extends JpaRepository<Menu, Long> {
     Optional<Menu> findByStatus(MenuStatus status);
+
+    @Query("SELECT DISTINCT m FROM Menu m LEFT JOIN FETCH m.menuItems WHERE m.status = :status")
+    Optional<Menu> findByStatusWithMenuItems(@Param("status") MenuStatus status);
 
     boolean existsByNameIgnoreCase(String name);
     

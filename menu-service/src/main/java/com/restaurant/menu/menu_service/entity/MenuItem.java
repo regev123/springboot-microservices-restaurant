@@ -69,9 +69,17 @@ public class MenuItem {
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
         updatedAt = now;
-        ingredients = new HashSet<>();
-        menus = new ArrayList<>();
-        kitchenStations = new ArrayList<>();
+        // Only initialize collections if they are null to avoid overwriting existing values
+        // This is critical for @ElementCollection - if ingredients are set via builder, don't overwrite them
+        if (ingredients == null) {
+            ingredients = new HashSet<>();
+        }
+        if (menus == null) {
+            menus = new ArrayList<>();
+        }
+        if (kitchenStations == null) {
+            kitchenStations = new ArrayList<>();
+        }
     }
     
     @PreUpdate

@@ -24,6 +24,13 @@ spring:
               filters:
                 - StripPrefix=1
 
+            - id: table-order-service
+              uri: ${table-order.service.url}
+              predicates:
+                - Path=/api/table-order-service/**
+              filters:
+                - StripPrefix=2
+
           globalcors:
             add-to-simple-url-handler-mapping: true
             cors-configurations:

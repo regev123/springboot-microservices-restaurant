@@ -625,7 +625,6 @@ public class DataInitializer {
             Set.of(
                 new Ingredient("Romaine Lettuce", false),
                 new Ingredient("Parmesan Cheese", false),
-                new Ingredient("Croutons", false),
                 new Ingredient("Caesar Dressing", false),
                 new Ingredient("Anchovies", true)
             ));
@@ -927,6 +926,9 @@ public class DataInitializer {
             request.setPrice(price);
             request.setIsAvailable(isAvailable);
             request.setIngredients(ingredients);
+            
+            System.out.println("Creating menu item: " + name + " with " + 
+                (ingredients != null ? ingredients.size() : 0) + " ingredients");
             
             menuItemService.createMenuItem(request);
             System.out.println("Created menu item: " + name + " (Category ID: " + categoryId + ")");

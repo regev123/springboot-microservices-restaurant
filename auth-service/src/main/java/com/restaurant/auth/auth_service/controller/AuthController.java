@@ -2,6 +2,8 @@ package com.restaurant.auth.auth_service.controller;
 
 import com.restaurant.auth.auth_service.dto.*;
 import com.restaurant.auth.auth_service.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Authentication", description = "Authentication endpoints for user login, password management, and user details")
 public class AuthController {
 
     private final AuthService authService;
@@ -43,6 +46,7 @@ public class AuthController {
      * @return {@link ResponseEntity} containing an {@link AuthResponse} with a JWT token and user details
      */
     @PostMapping("/login")
+    @Operation(summary = "User login", description = "Authenticates a user and returns a JWT token with user details")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse authResponse = authService.login(request.getEmail(), request.getPassword());
         return ResponseEntity.ok(authResponse);
@@ -61,6 +65,7 @@ public class AuthController {
      * @return {@link ResponseEntity} with HTTP 204 (No Content) upon successful password change
      */
     @PostMapping("/changePassword")
+    @Operation(summary = "Change password", description = "Changes the user's password. Requires email, old password, and new password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(
                 request.getEmail(),
@@ -83,6 +88,7 @@ public class AuthController {
      * @return {@link ResponseEntity} containing the user's profile information as a {@link UserResponse}
      */
     @GetMapping("/user")
+    @Operation(summary = "Get user details", description = "Retrieves details of the authenticated user. Requires JWT token in Authorization header")
     public ResponseEntity<UserResponse> getUser(@RequestHeader("X-User-Email") String userEmail) {
         UserResponse userResponse = authService.getUserByEmail(userEmail);
         return ResponseEntity.ok(userResponse);

@@ -121,11 +121,11 @@ public class MenuService {
     // Query: Get Active Menu
     // ---------------------------------------------------------------------
     /**
-     * Get the current active menu.
+     * Get the current active menu with menu items eagerly loaded.
      */
     public MenuDtoResponse getActiveMenu() {
-        return menuRepository.findByStatus(MenuStatus.ACTIVE)
-                .map(menuMapper::toDto)
+        return menuRepository.findByStatusWithMenuItems(MenuStatus.ACTIVE)
+                .map(menuMapper::toDtoWithMenuItems)
                 .orElseThrow(() -> new ResourceNotFoundException(NO_ACTIVE_MENU_MSG));
     }
 

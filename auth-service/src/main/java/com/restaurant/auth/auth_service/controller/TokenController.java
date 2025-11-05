@@ -2,6 +2,8 @@ package com.restaurant.auth.auth_service.controller;
 
 import com.restaurant.auth.auth_service.dto.TokenValidationRequest;
 import com.restaurant.auth.auth_service.service.TokenValidationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Token Validation", description = "JWT token validation endpoints for internal service use")
 public class TokenController {
 
     private final TokenValidationService tokenValidationService;
@@ -46,6 +49,7 @@ public class TokenController {
      *         </ul>
      */
     @PostMapping("/validateTokenTimestamp")
+    @Operation(summary = "Validate token timestamp", description = "Validates a JWT token by comparing its issued timestamp with the user's last password modification date. Returns 200 if valid, 403 if outdated.")
     public ResponseEntity<String> validateTokenIssuedAt(@RequestBody TokenValidationRequest request) {
         return tokenValidationService.validateToken(request);
     }

@@ -4,6 +4,9 @@ import com.restaurant.auth.auth_service.dto.*;
 import com.restaurant.auth.auth_service.entity.Role;
 import com.restaurant.auth.auth_service.service.AdminService;
 import com.restaurant.auth.auth_service.util.AuthorizationUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,8 @@ import java.util.List;
 @RequestMapping("/auth/admin")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin Management", description = "Administrative endpoints for managing users. All endpoints require ADMIN role.")
+@SecurityRequirement(name = "Bearer Authentication")
 public class AdminController {
 
     private final AdminService adminService;
@@ -52,6 +57,7 @@ public class AdminController {
      * @return {@link ResponseEntity} with status 204 (No Content) if successful
      */
     @PutMapping("/user/update")
+    @Operation(summary = "Update user", description = "Updates user information (first name, last name, phone number, role). Email and password are not updatable. Requires ADMIN role.")
     public ResponseEntity<Void> updateUser(
             @RequestHeader("X-User-Role") String userRole,
             @Valid @RequestBody UpdateUserRequest request
@@ -75,6 +81,7 @@ public class AdminController {
      * @return {@link ResponseEntity} containing a {@link UsersWithRolesResponse}
      */
     @GetMapping("/users")
+    @Operation(summary = "Get all users", description = "Retrieves all registered users excluding the currently authenticated admin. Requires ADMIN role.")
     public ResponseEntity<UsersWithRolesResponse> getAllUsers(
             @RequestHeader("X-User-Role") String userRole,
             @RequestHeader("X-User-Email") String userEmail
@@ -101,6 +108,7 @@ public class AdminController {
      * @return {@link ResponseEntity} with status 204 (No Content) if successful
      */
     @DeleteMapping("/user/{userId}/delete")
+    @Operation(summary = "Delete user", description = "Deletes a user by their unique identifier. Requires ADMIN role.")
     public ResponseEntity<Void> deleteUser(
             @RequestHeader("X-User-Role") String userRole,
             @PathVariable("userId") Long userId
@@ -124,6 +132,7 @@ public class AdminController {
      * @return {@link ResponseEntity} containing the created user details
      */
     @PostMapping("/register")
+    @Operation(summary = "Register new user", description = "Registers a new user in the system. Requires ADMIN role.")
     public ResponseEntity<UserDetailsDto> registerUser(
             @RequestHeader("X-User-Role") String userRole,
             @Valid @RequestBody RegisterRequest request

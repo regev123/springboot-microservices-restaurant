@@ -96,6 +96,13 @@ const Sidebar = () => {
       ],
     },
     {
+      id: 'tables',
+      label: 'Tables',
+      icon: '🪑',
+      path: '/tables',
+      roles: ['ADMIN', 'USER'],
+    },
+    {
       id: 'orders',
       label: 'Orders',
       icon: '🍽️',

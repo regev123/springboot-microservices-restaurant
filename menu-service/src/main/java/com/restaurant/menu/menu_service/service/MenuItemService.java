@@ -6,15 +6,20 @@ import com.restaurant.menu.menu_service.dto.MenuItem.CreateMenuItemDtoRequest;
 import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.dto.UpdateMenuItemRequest;
 import com.restaurant.menu.menu_service.entity.Category;
+import com.restaurant.menu.menu_service.entity.KitchenStation;
+import com.restaurant.menu.menu_service.entity.Menu;
 import com.restaurant.menu.menu_service.entity.MenuItem;
 import com.restaurant.menu.menu_service.mapper.MenuItemMapper;
 import com.restaurant.menu.menu_service.repository.CategoryRepository;
+import com.restaurant.menu.menu_service.repository.KitchenStationRepository;
+import com.restaurant.menu.menu_service.repository.MenuRepository;
 import com.restaurant.menu.menu_service.repository.MenuItemRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +42,8 @@ public class MenuItemService {
     // ==================== DEPENDENCIES ====================
     private final MenuItemRepository menuItemRepository;
     private final CategoryRepository categoryRepository;
+    private final MenuRepository menuRepository;
+    private final KitchenStationRepository kitchenStationRepository;
     private final MenuItemMapper menuItemMapper;
 
     // ---------------------------------------------------------------------
@@ -63,11 +70,11 @@ public class MenuItemService {
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .isAvailable(request.getIsAvailable())
-                .ingredients(request.getIngredients())
+                .ingredients(request.getIngredients() != null ? new HashSet<>(request.getIngredients()) : new HashSet<>())
                 .build();
 
-        // 5. Save and return
-        MenuItem savedMenuItem = menuItemRepository.save(menuItem);
+        // 4. Save and flush to ensure @ElementCollection is persisted immediately
+        MenuItem savedMenuItem = menuItemRepository.saveAndFlush(menuItem);
         return menuItemMapper.toDto(savedMenuItem);
     }
 
@@ -110,12 +117,37 @@ public class MenuItemService {
     // ---------------------------------------------------------------------
     /**
      * Delete a menu item by ID.
+     * Removes the menu item from all menus and kitchen stations before deletion
+     * to avoid foreign key constraint violations.
      */
     public void deleteMenuItem(Long itemId) {
-        if (!menuItemRepository.existsById(itemId)) {
-            throw new ResourceNotFoundException(String.format(MENU_ITEM_NOT_FOUND_MSG, itemId));
+        MenuItem menuItem = menuItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MENU_ITEM_NOT_FOUND_MSG, itemId)));
+        
+        // 1. Remove menu item from all menus that reference it
+        // Since Menu owns the relationship, we need to remove it from each menu's menuItems list
+        // Use findAllWithMenuItems to eagerly fetch relationships
+        List<Menu> menus = menuRepository.findAllWithMenuItems();
+        for (Menu menu : menus) {
+            if (menu.getMenuItems() != null && menu.getMenuItems().contains(menuItem)) {
+                menu.getMenuItems().remove(menuItem);
+                menuRepository.save(menu);
+            }
         }
-        menuItemRepository.deleteById(itemId);
+        
+        // 2. Remove menu item from all kitchen stations that reference it
+        // Since KitchenStation owns the relationship, we need to remove it from each station's menuItems list
+        // Use findAllWithMenuItems to eagerly fetch relationships
+        List<KitchenStation> stations = kitchenStationRepository.findAllWithMenuItems();
+        for (KitchenStation station : stations) {
+            if (station.getMenuItems() != null && station.getMenuItems().contains(menuItem)) {
+                station.getMenuItems().remove(menuItem);
+                kitchenStationRepository.save(station);
+            }
+        }
+        
+        // 3. Now delete the menu item (all relationships have been removed)
+        menuItemRepository.delete(menuItem);
     }
 
     // ---------------------------------------------------------------------

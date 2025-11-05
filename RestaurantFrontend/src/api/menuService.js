@@ -17,6 +17,8 @@ const menuService = {
 
   fetchMenus: async () => (await api.get('/menu/all')).data,
 
+  getActiveMenu: async () => (await api.get('/menu/active')).data,
+
   createMenu: async (menu) => (await api.post('/menu/admin/create', menu)).data,
 
   deleteMenu: async (menuId) => (await api.delete(`/menu/admin/delete/${menuId}`)).data,

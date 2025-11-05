@@ -14,6 +14,7 @@
         <module>api-gateway-service</module>
         <module>common-service</module>
         <module>menu-service</module>
+        <module>table-order-service</module>
     </modules>
 
     <properties>
@@ -21,6 +22,7 @@
         <spring.boot.version>3.5.5</spring.boot.version>
         <spring.cloud.version>2025.0.0</spring.cloud.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <springdoc.version>2.7.0</springdoc.version>
     </properties>
 
     <dependencyManagement>
@@ -39,6 +41,13 @@
                 <version>${spring.cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- SpringDoc OpenAPI for Swagger -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

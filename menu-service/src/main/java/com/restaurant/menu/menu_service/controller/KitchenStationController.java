@@ -7,6 +7,9 @@ import com.restaurant.menu.menu_service.dto.KitchenStation.UpdateKitchenStationD
 import com.restaurant.menu.menu_service.dto.KitchenStation.UpdateKitchenStationMenuItemsRequest;
 import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.service.KitchenStationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/menu/kitchen-stations")
 @RequiredArgsConstructor
+@Tag(name = "Kitchen Station Management", description = "Endpoints for managing kitchen stations. Admin operations require ADMIN role.")
+@SecurityRequirement(name = "Bearer Authentication")
 /**
  * REST controller exposing endpoints for managing kitchen stations.
  * Follows Single Responsibility Principle by handling only kitchen station-related HTTP operations.
@@ -35,6 +40,7 @@ public class KitchenStationController {
      */
     @PostMapping("/admin/create")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Create kitchen station", description = "Creates a new kitchen station. Requires ADMIN role.")
     public ResponseEntity<KitchenStationDto> createKitchenStation(@Valid @RequestBody CreateKitchenStationDtoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(kitchenStationService.createKitchenStation(request));
     }
@@ -47,6 +53,7 @@ public class KitchenStationController {
      */
     @PutMapping("/admin/update")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Update kitchen station", description = "Updates an existing kitchen station by ID. Requires ADMIN role.")
     public ResponseEntity<KitchenStationDto> updateKitchenStation(
             @Valid @RequestBody UpdateKitchenStationDtoRequest request
     ) {
@@ -61,6 +68,7 @@ public class KitchenStationController {
      */
     @DeleteMapping("/admin/delete/{stationId}")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Delete kitchen station", description = "Deletes a kitchen station by ID. Requires ADMIN role.")
     public ResponseEntity<Void> deleteKitchenStation(@PathVariable("stationId") Long stationId) {
         kitchenStationService.deleteKitchenStation(stationId);
         return ResponseEntity.noContent().build();
@@ -73,6 +81,7 @@ public class KitchenStationController {
      * List all kitchen stations.
      */
     @GetMapping("/all")
+    @Operation(summary = "List all kitchen stations", description = "Lists all kitchen stations. Public endpoint.")
     public ResponseEntity<List<KitchenStationDto>> getAllKitchenStations() {
         return ResponseEntity.ok(kitchenStationService.getAllKitchenStations());
     }
@@ -84,6 +93,7 @@ public class KitchenStationController {
      * List only active kitchen stations ordered by sort order.
      */
     @GetMapping("/active")
+    @Operation(summary = "List active kitchen stations", description = "Lists only active kitchen stations ordered by sort order. Public endpoint.")
     public ResponseEntity<List<KitchenStationDto>> getActiveKitchenStations() {
         return ResponseEntity.ok(kitchenStationService.getActiveKitchenStations());
     }
@@ -95,6 +105,7 @@ public class KitchenStationController {
      * List active kitchen stations that have menu items assigned to them.
      */
     @GetMapping("/active-with-items")
+    @Operation(summary = "List active stations with menu items", description = "Lists active kitchen stations that have menu items assigned to them. Public endpoint.")
     public ResponseEntity<List<KitchenStationDto>> getActiveStationsWithMenuItems() {
         return ResponseEntity.ok(kitchenStationService.getActiveStationsWithMenuItems());
     }
@@ -106,6 +117,7 @@ public class KitchenStationController {
      * Get a single kitchen station by ID.
      */
     @GetMapping("/{stationId}")
+    @Operation(summary = "Get kitchen station by ID", description = "Gets a single kitchen station by ID. Public endpoint.")
     public ResponseEntity<KitchenStationDto> getKitchenStationById(@PathVariable("stationId") Long stationId) {
         return ResponseEntity.ok(kitchenStationService.getKitchenStationById(stationId));
     }
@@ -117,6 +129,7 @@ public class KitchenStationController {
      * Get menu items assigned to a specific kitchen station by ID.
      */
     @GetMapping("/{stationId}/menu-items")
+    @Operation(summary = "Get menu items by station ID", description = "Gets menu items assigned to a specific kitchen station by ID. Public endpoint.")
     public ResponseEntity<List<MenuItemDto>> getKitchenStationMenuItems(@PathVariable("stationId") Long stationId) {
         return ResponseEntity.ok(kitchenStationService.getMenuItemsByStationId(stationId));
     }
@@ -131,6 +144,7 @@ public class KitchenStationController {
      */
     @PutMapping("/admin/update-menu-items")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Update kitchen station menu items assignments", description = "Batch updates menu items assigned to kitchen stations. Accepts a map of stationId -> List of menuItemIds. Requires ADMIN role.")
     public ResponseEntity<List<KitchenStationDto>> updateKitchenStationMenuItems(
             @Valid @RequestBody UpdateKitchenStationMenuItemsRequest request
     ) {

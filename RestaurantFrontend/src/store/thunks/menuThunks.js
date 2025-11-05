@@ -98,6 +98,17 @@ export const fetchMenus = createAsyncThunk('admin/fetchMenus', async (_, { rejec
   }
 });
 
+export const fetchActiveMenu = createAsyncThunk(
+  'menu/fetchActiveMenu',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await menuService.getActiveMenu();
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 export const createMenu = createAsyncThunk(
   'admin/createMenu',
   async (menu, { dispatch, rejectWithValue }) => {

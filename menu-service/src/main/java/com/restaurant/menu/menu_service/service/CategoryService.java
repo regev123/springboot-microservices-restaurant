@@ -5,10 +5,15 @@ import com.restaurant.common.exception.ResourceNotFoundException;
 import com.restaurant.menu.menu_service.dto.Category.CategoryDtoResponse;
 import com.restaurant.menu.menu_service.dto.Category.UpdateOrderDtoRequest;
 import com.restaurant.menu.menu_service.entity.Category;
+import com.restaurant.menu.menu_service.entity.KitchenStation;
+import com.restaurant.menu.menu_service.entity.Menu;
+import com.restaurant.menu.menu_service.entity.MenuItem;
 import com.restaurant.menu.menu_service.exceptions.CategoryAlreadyExistException;
 import com.restaurant.menu.menu_service.exceptions.InvalidCategoryOrderException;
 import com.restaurant.menu.menu_service.mapper.CategoryMapper;
 import com.restaurant.menu.menu_service.repository.CategoryRepository;
+import com.restaurant.menu.menu_service.repository.KitchenStationRepository;
+import com.restaurant.menu.menu_service.repository.MenuRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,6 +47,8 @@ public class CategoryService {
     // ==================== DEPENDENCIES ====================
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final MenuRepository menuRepository;
+    private final KitchenStationRepository kitchenStationRepository;
 
     // ---------------------------------------------------------------------
     // Command: Create Category
@@ -134,18 +141,62 @@ public class CategoryService {
      * Delete a category by ID and automatically reorder remaining categories.
      * Maintains sequential ordering after deletion.
      * 
+     * When a category is deleted, all menu items in that category are also deleted
+     * (due to orphanRemoval = true). Before deleting, we need to remove those menu items
+     * from all menus and kitchen stations that reference them to avoid foreign key constraints.
+     * 
      * @param categoryId the ID of the category to delete
      * @throws ResourceNotFoundException if category doesn't exist
      */
     public List<CategoryDtoResponse> deleteCategory(Long categoryId) {
-        Category categoryToDelete = findCategoryById(categoryId);
+        // Use findByIdWithMenuItems to eagerly fetch menu items
+        Category categoryToDelete = findCategoryByIdWithMenuItems(categoryId);
         Integer deletedOrder = categoryToDelete.getSortOrder();
         
+        // Get all menu items in this category before deletion
+        List<MenuItem> menuItemsToDelete = categoryToDelete.getMenuItems();
+        
+        // Remove each menu item from all menus and kitchen stations that reference them
+        if (menuItemsToDelete != null && !menuItemsToDelete.isEmpty()) {
+            removeMenuItemsFromMenusAndStations(menuItemsToDelete);
+        }
+        
+        // Now delete the category (this will cascade delete all menu items via orphanRemoval)
         categoryRepository.deleteById(categoryId);
         reorderCategoriesAfterDeletion(deletedOrder);
         
         // Return all categories after deletion and reordering
         return getAllCategories();
+    }
+    
+    /**
+     * Remove menu items from all menus and kitchen stations that reference them.
+     * This prevents foreign key constraint violations when menu items are deleted.
+     * 
+     * @param menuItems the menu items to remove from relationships
+     */
+    private void removeMenuItemsFromMenusAndStations(List<MenuItem> menuItems) {
+        // 1. Remove menu items from all menus that reference them
+        List<Menu> menus = menuRepository.findAllWithMenuItems();
+        for (Menu menu : menus) {
+            if (menu.getMenuItems() != null) {
+                boolean modified = menu.getMenuItems().removeAll(menuItems);
+                if (modified) {
+                    menuRepository.save(menu);
+                }
+            }
+        }
+        
+        // 2. Remove menu items from all kitchen stations that reference them
+        List<KitchenStation> stations = kitchenStationRepository.findAllWithMenuItems();
+        for (KitchenStation station : stations) {
+            if (station.getMenuItems() != null) {
+                boolean modified = station.getMenuItems().removeAll(menuItems);
+                if (modified) {
+                    kitchenStationRepository.save(station);
+                }
+            }
+        }
     }
     
     /**
@@ -157,6 +208,21 @@ public class CategoryService {
      */
     private Category findCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    String.format(CATEGORY_NOT_FOUND_DELETE_MSG, categoryId)
+                ));
+    }
+    
+    /**
+     * Find a category by ID with menu items eagerly fetched.
+     * Used during deletion to ensure all menu items are loaded.
+     * 
+     * @param categoryId the ID of the category to find
+     * @return the found category with menu items loaded
+     * @throws ResourceNotFoundException if category doesn't exist
+     */
+    private Category findCategoryByIdWithMenuItems(Long categoryId) {
+        return categoryRepository.findByIdWithMenuItems(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                     String.format(CATEGORY_NOT_FOUND_DELETE_MSG, categoryId)
                 ));

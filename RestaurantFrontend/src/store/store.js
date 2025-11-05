@@ -4,6 +4,7 @@ import authReducer from './slices/authSlice';
 import adminReducer from './slices/adminSlice';
 import menuReducer from './slices/menuSlice';
 import uiReducer from './slices/uiSlice';
+import tableReducer from './slices/tableSlice';
 
 import { resetAllStore } from './slices/authSlice';
 
@@ -12,6 +13,7 @@ const rootReducer = combineReducers({
   admin: adminReducer,
   menu: menuReducer,
   ui: uiReducer,
+  tables: tableReducer,
 });
 
 const appReducer = (state, action) => {

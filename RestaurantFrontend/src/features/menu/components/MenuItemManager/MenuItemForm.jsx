@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Select from '../../../../components/common/Select/Select';
 import Input from '../../../../components/common/Input/Input';
 import TextArea from '../../../../components/common/TextArea/TextArea';
@@ -7,10 +7,12 @@ import SectionHeader from '../../../../components/common/SectionHeader/SectionHe
 import MenuItemIngredientsManagerForm from './MenuItemIngridientsManager/MenuItemIngridientsManagerForm';
 import ToggleCard from '../../../../components/common/ToggleCard/ToggleCard';
 import FormButton from '../../../../components/common/Button2/FormButton';
+import EditableEntityView from '../../../../components/common/EditableEntityView/EditableEntityView';
 
 const MenuItemForm = ({
   categories,
   addMode,
+  editingMenuItem,
   formData,
   formErrors,
   handleInputChange,
@@ -20,6 +22,13 @@ const MenuItemForm = ({
 }) => {
   return (
     <GlassCard className="w-full">
+      {!addMode && editingMenuItem && (
+        <EditableEntityView
+          title="Editing Menu Item"
+          text={`Menu Item #${editingMenuItem.id} - ${editingMenuItem.name} (${editingMenuItem.category?.name || 'No Category'})`}
+        />
+      )}
+
       <SectionHeader
         title=""
         description={addMode ? 'Create a new menu item' : 'Edit an existing menu item'}

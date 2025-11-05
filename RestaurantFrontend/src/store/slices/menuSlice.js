@@ -22,6 +22,7 @@ import {
   updateKitchenStationMenuItems,
   fetchMenuMenuItems,
   updateMenuMenuItems,
+  fetchActiveMenu,
 } from '../thunks/menuThunks.js';
 
 const setPending = (uiState, key) => {
@@ -40,6 +41,7 @@ const menuSlice = createSlice({
   name: 'menu',
   initialState: {
     menus: [],
+    activeMenu: null,
     categories: [],
     menuItems: [],
     kitchenStations: [],
@@ -48,6 +50,7 @@ const menuSlice = createSlice({
     },
     menuUI: {
       FetchingMenus: false,
+      FetchingActiveMenu: false,
     },
     menuItemsUI: {
       FetchingMenuItems: false,
@@ -132,7 +135,19 @@ const menuSlice = createSlice({
             updatedAt: new Date().toISOString(),
           };
         }
-      });
+      })
+
+      // FETCH ACTIVE MENU
+      .addCase(fetchActiveMenu.pending, (state) =>
+        setPending(state.menuUI, 'FetchingActiveMenu')
+      )
+      .addCase(fetchActiveMenu.fulfilled, (state, action) => {
+        setFulfilled(state.menuUI, 'FetchingActiveMenu');
+        state.activeMenu = action.payload;
+      })
+      .addCase(fetchActiveMenu.rejected, (state, action) =>
+        setRejected(state.menuUI, 'FetchingActiveMenu')
+      );
 
     /* ===== MENU ITEMS ===== */
     builder

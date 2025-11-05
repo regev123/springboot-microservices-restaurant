@@ -8,6 +8,9 @@ import com.restaurant.menu.menu_service.dto.Menu.UpdateMenuDtoRequest;
 import com.restaurant.menu.menu_service.dto.Menu.UpdateMenuMenuItemsRequest;
 import com.restaurant.menu.menu_service.dto.MenuItem.MenuItemDto;
 import com.restaurant.menu.menu_service.service.MenuService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/menu")
 @RequiredArgsConstructor
+@Tag(name = "Menu Management", description = "Endpoints for managing menus, menu items, and categories. Admin operations require ADMIN role.")
+@SecurityRequirement(name = "Bearer Authentication")
 /**
  * REST controller exposing endpoints for managing menus.
  * Follows Single Responsibility Principle by handling only menu-related HTTP operations.
@@ -39,6 +44,7 @@ public class MenuController {
      */
     @PostMapping("/admin/create")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Create menu", description = "Creates a new menu. Requires ADMIN role.")
     public ResponseEntity<MenuDtoResponse> createMenu(@Valid @RequestBody CreateMenuDtoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(menuService.createMenu(request.getName()));
@@ -52,6 +58,7 @@ public class MenuController {
      */
     @DeleteMapping("/admin/delete/{menuId}")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Delete menu", description = "Deletes a menu by ID. Requires ADMIN role.")
     public ResponseEntity<MenuDtoResponse> deleteMenu(@PathVariable("menuId") Long menuId) {
         menuService.deleteMenu(menuId);
         return ResponseEntity.noContent().build();
@@ -68,6 +75,7 @@ public class MenuController {
      */
     @PutMapping("/admin/update")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Update menu", description = "Updates an existing menu. Requires ADMIN role.")
     public ResponseEntity<Void> updateMenu(@Valid @RequestBody UpdateMenuDtoRequest request) {
         menuService.updateMenu(request.getId(), request.getName());
         return ResponseEntity.noContent().build();
@@ -81,6 +89,7 @@ public class MenuController {
      */
     @PutMapping("/admin/{menuId}/activate")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Activate menu", description = "Activates a menu by ID (deactivates any existing active menu). Requires ADMIN role.")
     public ResponseEntity<List<MenuDtoResponse>> activateMenu(@PathVariable("menuId") Long menuId) {
         return ResponseEntity.ok(menuService.activateMenu(menuId));
     }
@@ -92,6 +101,7 @@ public class MenuController {
      * Get the current active menu.
      */
     @GetMapping("/active")
+    @Operation(summary = "Get active menu", description = "Gets the current active menu. Public endpoint.")
     public ResponseEntity<MenuDtoResponse> getActiveMenu() {
         return ResponseEntity.ok(menuService.getActiveMenu());
     }
@@ -104,6 +114,7 @@ public class MenuController {
      */
     @GetMapping("/all")
     @RequiresRole("ADMIN")
+    @Operation(summary = "List all menus", description = "Lists all menus. Requires ADMIN role.")
     public ResponseEntity<List<MenuDtoResponse>> getAllMenus() {
         return ResponseEntity.ok(menuService.getAllMenus());
     }
@@ -116,6 +127,7 @@ public class MenuController {
      */
     @GetMapping("/status")
     @RequiresRole("ADMIN")
+    @Operation(summary = "List all menu statuses", description = "Lists all possible menu statuses. Requires ADMIN role.")
     public ResponseEntity<List<StatusDtoResponse>> getAllStatuses() {
         return ResponseEntity.ok(menuService.getAllStatuses());
     }
@@ -130,6 +142,7 @@ public class MenuController {
      */
     @PutMapping("/admin/update-menu-items")
     @RequiresRole("ADMIN")
+    @Operation(summary = "Update menu items assignments", description = "Batch updates menu items assigned to menus. Accepts a map of menuId -> Set of menuItemIds. Requires ADMIN role.")
     public ResponseEntity<List<MenuDtoResponse>> updateMenuMenuItems(
             @Valid @RequestBody UpdateMenuMenuItemsRequest request
     ) {
@@ -143,6 +156,7 @@ public class MenuController {
      * Get menu items assigned to a specific menu by ID.
      */
     @GetMapping("/{menuId}/menu-items")
+    @Operation(summary = "Get menu items by menu ID", description = "Gets menu items assigned to a specific menu by ID. Public endpoint.")
     public ResponseEntity<List<MenuItemDto>> getMenuMenuItems(@PathVariable("menuId") Long menuId) {
         return ResponseEntity.ok(menuService.getMenuItemsByMenuId(menuId));
     }
