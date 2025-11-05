@@ -4,12 +4,16 @@ A modern, full-stack restaurant management system built with **Spring Boot micro
 
 ## 🎯 **Project Overview**
 
-This system provides a complete solution for restaurant management, including user authentication, menu management, and administrative operations. Built with microservices architecture for scalability and maintainability.
+This system provides a complete solution for restaurant management, including user authentication, menu management, table management, order processing, and administrative operations. Built with microservices architecture for scalability and maintainability.
 
 ### **Key Features**
 
 - 🔐 **JWT-based Authentication** with role-based access control
 - 🍽️ **Menu Management** with categories and menu items
+- 🪑 **Table Management** with status tracking (Available, Occupied, Reserved, Cleaning)
+- 📋 **Order System** with real-time order tracking
+- 📊 **Floor Plan View** for visual table management
+- 🔄 **Real-time Status Updates** (SSE ready for implementation)
 - 👥 **User Management** with admin capabilities
 - 🎨 **Modern React Frontend** with responsive design
 - 🏗️ **Microservices Architecture** for scalability
@@ -39,7 +43,14 @@ This system provides a complete solution for restaurant management, including us
 │  ├── Menu Management                                        │
 │  ├── Category Management                                    │
 │  ├── Menu Item Management                                   │
-│  └── Order Validation                                       │
+│  └── Kitchen Station Management                             │
+├─────────────────────────────────────────────────────────────┤
+│  🪑 Table Order Service                                      │
+│  ├── Table Management                                       │
+│  ├── Table Status Management                                │
+│  ├── Order Creation & Management                            │
+│  ├── Order Item Management                                  │
+│  └── Real-time Updates (SSE)                                │
 ├─────────────────────────────────────────────────────────────┤
 │  🔧 Common Service                                          │
 │  ├── Shared Utilities                                       │
@@ -110,6 +121,10 @@ cd menu-service
 # Start API Gateway (in new terminal)
 cd api-gateway-service
 ./mvnw spring-boot:run
+
+# Start Table Order Service (in new terminal)
+cd table-order-service
+./mvnw spring-boot:run
 ```
 
 **Or start all services with Maven:**
@@ -119,6 +134,7 @@ cd api-gateway-service
 ./mvnw clean install
 ./mvnw spring-boot:run -pl auth-service
 ./mvnw spring-boot:run -pl menu-service
+./mvnw spring-boot:run -pl table-order-service
 ./mvnw spring-boot:run -pl api-gateway-service
 ```
 
@@ -136,6 +152,7 @@ npm start
 - **API Gateway**: http://localhost:8080
 - **Auth Service**: http://localhost:8081
 - **Menu Service**: http://localhost:8082
+- **Table Order Service**: http://localhost:8083
 
 ### **Default Credentials**
 
@@ -183,6 +200,19 @@ springboot-microservices-restaurant/
 │   │       ├── controller/          # REST controllers
 │   │       ├── dto/                 # Request/Response DTOs
 │   │       ├── entity/              # JPA entities
+│   │       ├── exceptions/          # Custom exceptions
+│   │       ├── mapper/              # Entity-DTO mappers
+│   │       ├── repository/          # Data access layer
+│   │       └── service/             # Business logic
+│   └── src/main/resources/
+│       └── application.yml          # Service configuration
+├── 📁 table-order-service/          # Table and order management microservice
+│   ├── src/main/java/
+│   │   └── com/restaurant/tableorder/
+│   │       ├── config/              # Configuration classes
+│   │       ├── controller/          # REST controllers
+│   │       ├── dto/                 # Request/Response DTOs
+│   │       ├── entity/              # JPA entities (Table, Order, OrderItem)
 │   │       ├── exceptions/          # Custom exceptions
 │   │       ├── mapper/              # Entity-DTO mappers
 │   │       ├── repository/          # Data access layer
@@ -246,13 +276,38 @@ POST   /api/menu/categories/order    # Update category order (Admin)
 GET    /api/menu/items               # Get all menu items (Admin)
 POST   /api/menu/items               # Create menu item (Admin)
 PUT    /api/menu/items/{id}          # Update menu item (Admin)
-DELETE /api/menu/items/{id}          # Delete menu item (Admin)
+DELETE /api/menu/items/{id}         # Delete menu item (Admin)
 
 GET    /api/menu/menus               # Get all menus (Admin)
 POST   /api/menu/menus               # Create menu (Admin)
 PUT    /api/menu/menus/{id}          # Update menu (Admin)
 DELETE /api/menu/menus/{id}          # Delete menu (Admin) 
 POST   /api/menu/menus/{id}/activate # Activate menu (Admin)
+
+GET    /api/menu/active              # Get active menu (Public)
+```
+
+### **Table Management Endpoints**
+
+```
+GET    /api/tables/all               # Get all active tables (User/Waitress)
+GET    /api/tables/{tableId}         # Get table by ID (User/Waitress)
+GET    /api/tables/{tableId}/with-orders  # Get table with orders (User/Waitress)
+PUT    /api/tables/change-status     # Change table status (User/Waitress)
+
+GET    /api/tables/admin/all        # Get all tables (Admin)
+POST   /api/tables/admin/create     # Create table (Admin)
+PUT    /api/tables/admin/update     # Update table (Admin)
+DELETE /api/tables/admin/delete/{id} # Delete table (Admin)
+```
+
+### **Order Management Endpoints**
+
+```
+POST   /api/orders                  # Create order (User/Waitress)
+GET    /api/orders/table/{tableId}  # Get orders by table (User/Waitress)
+GET    /api/orders/{orderId}        # Get order by ID (User/Waitress)
+PUT    /api/orders/{orderId}/cancel # Cancel order (User/Waitress)
 ```
 
 ## 🎨 **Frontend Features**
@@ -269,14 +324,19 @@ POST   /api/menu/menus/{id}/activate # Activate menu (Admin)
 - **🔐 Authentication** - Login, registration, password management
 - **👥 User Management** - Admin panel for user operations
 - **🍽️ Menu Management** - Create, edit, and organize menus
+- **🪑 Table Management** - Table CRUD operations and floor plan view
+- **📋 Order Management** - Create and manage orders for tables
 - **📊 Dashboard** - Overview of system status
 - **🔔 Notifications** - Toast notifications for user feedback
+- **⏱️ Real-time Updates** - Live order elapsed time tracking
 
 ### **State Management**
 
 - **Redux Toolkit** - Predictable state management
-- **RTK Query** - Efficient data fetching and caching
+- **Async Thunks** - Efficient data fetching and caching
+- **Custom Hooks** - Reusable logic extraction (useTableDetailForm, useTablesForm)
 - **Form Validation** - Client-side validation with error handling
+- **Modular Components** - Feature-based component organization
 
 ## 🏗️ **Design Patterns & Principles**
 
@@ -372,6 +432,20 @@ kubectl apply -f k8s/api-gateway-deployment.yaml
 - **Caching Strategy** - Ready for Redis integration
 - **Connection Pooling** - Database connection optimization
 
+## 🔄 **Real-time Features**
+
+### **Server-Sent Events (SSE) - Ready for Implementation**
+
+The system is prepared for real-time table status synchronization:
+- **Event Broadcasting** - When any table status changes, all connected clients receive updates
+- **Automatic State Updates** - Redux state updates automatically without page refresh
+- **Multi-client Support** - Multiple users/devices stay synchronized in real-time
+
+### **Current Real-time Features**
+
+- **Live Order Tracking** - Elapsed time updates every second for active orders
+- **Status Management** - Table status changes propagate immediately (SSE ready)
+
 ## 🚀 **Deployment**
 
 ### **Production Deployment**
@@ -379,8 +453,9 @@ kubectl apply -f k8s/api-gateway-deployment.yaml
 1. **Configure Environment Variables**
 2. **Set up Database** (PostgreSQL/MySQL)
 3. **Configure JWT Secrets**
-4. **Deploy to Cloud Platform** (AWS, GCP, Azure)
-5. **Set up Monitoring** (Prometheus, Grafana)
+4. **Set up SSE Endpoint** for real-time updates
+5. **Deploy to Cloud Platform** (AWS, GCP, Azure)
+6. **Set up Monitoring** (Prometheus, Grafana)
 
 ### **Environment Configuration**
 
